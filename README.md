@@ -5,3 +5,4 @@
 - Implement secure authentication and user management
 - Provide career-related resources and guidance
 - Maintain clean and scalable project architecture
+
