@@ -141,10 +141,10 @@ The app will run at **http://localhost:5173**
 | Page | Route | Status | Notes |
 |------|-------|--------|-------|
 | Home | `/` | ✅ Complete | Hero, search, featured jobs, stats |
-| Jobs | `/jobs` | 🔄 In Progress | Listings, filters, search |
-| Login | `/login` | 🔜 Planned | JWT auth |
-| Register | `/register` | 🔜 Planned | Role selection (Seeker / Employer) |
-| Dashboard | `/dashboard` | 🔜 Planned | Role-based views |
+| Jobs | `/jobs` | ✅ Complete  | Listings, filters, search |
+| Login | `/login` | ✅ Complete  | JWT auth |
+| Register | `/register` |✅ Complete  | Role selection (Seeker / Employer) |
+| Dashboard | `/dashboard` |✅ Complete  | Role-based views |
 
 ---
 

@@ -1,33 +1,28 @@
-// 
-
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import "./Jobs.css";
 
-const ALL_JOBS = [
-  { id: 1, title: "Software Engineer", company: "Google", location: "Bangalore", type: "Full-time", salary: "₹18L – ₹28L", category: "Engineering", logo: "GO", posted: "2 days ago", description: "Build scalable backend systems using Go and distributed architecture." },
-  { id: 2, title: "Data Scientist", company: "Microsoft", location: "Hyderabad", type: "Full-time", salary: "₹15L – ₹22L", category: "Data", logo: "MS", posted: "1 day ago", description: "Develop ML models and data pipelines using Python and Azure." },
-  { id: 3, title: "Frontend Developer", company: "Flipkart", location: "Bangalore", type: "Full-time", salary: "₹12L – ₹18L", category: "Engineering", logo: "FK", posted: "3 days ago", description: "Build performant React applications for millions of users." },
-  { id: 4, title: "UI/UX Designer", company: "Zomato", location: "Gurugram", type: "Full-time", salary: "₹10L – ₹16L", category: "Design", logo: "ZO", posted: "5 days ago", description: "Design intuitive user experiences for our food delivery platform." },
-  { id: 5, title: "DevOps Engineer", company: "Infosys", location: "Pune", type: "Contract", salary: "₹14L – ₹20L", category: "Engineering", logo: "IN", posted: "1 week ago", description: "Manage CI/CD pipelines and cloud infrastructure on AWS." },
-  { id: 6, title: "Product Manager", company: "Swiggy", location: "Bangalore", type: "Full-time", salary: "₹20L – ₹30L", category: "Management", logo: "SW", posted: "2 days ago", description: "Drive product strategy and roadmap for our logistics platform." },
-  { id: 7, title: "Backend Engineer", company: "Razorpay", location: "Bangalore", type: "Full-time", salary: "₹16L – ₹24L", category: "Engineering", logo: "RZ", posted: "4 days ago", description: "Build payment infrastructure handling millions of transactions." },
-  { id: 8, title: "Data Analyst", company: "Paytm", location: "Remote", type: "Part-time", salary: "₹8L – ₹12L", category: "Data", logo: "PT", posted: "3 days ago", description: "Analyze user behaviour and business metrics using SQL and Tableau." },
-  { id: 9, title: "ML Engineer", company: "CRED", location: "Bangalore", type: "Full-time", salary: "₹18L – ₹26L", category: "Data", logo: "CR", posted: "6 days ago", description: "Build recommendation and fraud detection systems at scale." },
-  { id: 10, title: "Marketing Manager", company: "Meesho", location: "Bangalore", type: "Full-time", salary: "₹12L – ₹18L", category: "Marketing", logo: "ME", posted: "1 week ago", description: "Lead digital marketing campaigns and growth initiatives." },
-  { id: 11, title: "Android Developer", company: "PhonePe", location: "Pune", type: "Full-time", salary: "₹14L – ₹22L", category: "Engineering", logo: "PP", posted: "2 days ago", description: "Build the PhonePe Android app used by 400M+ users." },
-  { id: 12, title: "HR Manager", company: "TCS", location: "Chennai", type: "Full-time", salary: "₹8L – ₹14L", category: "HR", logo: "TC", posted: "5 days ago", description: "Manage talent acquisition and employee engagement programs." },
-];
+const API = "http://localhost:5000/api";
+
+function authHeaders() {
+  const token = localStorage.getItem("token");
+  return { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
+}
 
 const CATEGORIES = ["All", "Engineering", "Data", "Design", "Management", "Marketing", "HR"];
 const LOCATIONS  = ["All", "Bangalore", "Hyderabad", "Pune", "Gurugram", "Chennai", "Remote"];
 const JOB_TYPES  = ["All", "Full-time", "Part-time", "Contract"];
 
-const TYPE_COLORS = {
-  "Full-time": "#22c55e",
-  "Part-time": "#f59e0b",
-  "Contract":  "#3b82f6",
+const TYPE_STYLES = {
+  "Full-time": { bg: "#dcfce7", color: "#16a34a" },
+  "Part-time": { bg: "#fef3c7", color: "#d97706" },
+  "Contract":  { bg: "#dbeafe", color: "#2563eb" },
 };
+
+const LOGO_COLORS = [
+  "#FF6B35", "#7C3AED", "#0EA5E9", "#10B981", "#F59E0B", "#EF4444",
+  "#8B5CF6", "#06B6D4", "#84CC16", "#F97316",
+];
 
 export default function Jobs() {
   const navigate = useNavigate();
@@ -39,8 +34,51 @@ export default function Jobs() {
   const [jobType,  setJobType]  = useState("All");
   const [sortBy,   setSortBy]   = useState("newest");
   const [saved,    setSaved]    = useState([]);
+  const [allJobs,  setAllJobs]  = useState([]);
+  const [loading,  setLoading]  = useState(true);
+  const [error,    setError]    = useState("");
+  const [applying, setApplying] = useState(null);
+  const [applyMsg, setApplyMsg] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const filtered = ALL_JOBS
+  useEffect(() => { fetchJobs(); }, []);
+
+  async function fetchJobs() {
+    try {
+      setLoading(true);
+      const res = await fetch(`${API}/jobs`);
+      const data = await res.json();
+      setAllJobs(data.jobs || []);
+    } catch {
+      setError("Could not load jobs. Is the backend running?");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleApply(e, jobId) {
+    e.stopPropagation();
+    const token = localStorage.getItem("token");
+    if (!token) { navigate("/login"); return; }
+    setApplying(jobId);
+    setApplyMsg("");
+    try {
+      const res = await fetch(`${API}/applications`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ jobId: String(jobId) }),
+      });
+      const data = await res.json();
+      setApplyMsg(!res.ok ? (data.message || "Failed to apply.") : "Applied successfully! 🎉");
+    } catch {
+      setApplyMsg("Could not connect to server.");
+    } finally {
+      setApplying(null);
+      setTimeout(() => setApplyMsg(""), 3500);
+    }
+  }
+
+  const filtered = allJobs
     .filter((j) => {
       const kw = keyword.toLowerCase();
       const matchKeyword  = !kw || j.title.toLowerCase().includes(kw) || j.company.toLowerCase().includes(kw);
@@ -51,7 +89,8 @@ export default function Jobs() {
     })
     .sort((a, b) => sortBy === "newest" ? b.id - a.id : a.id - b.id);
 
-  function toggleSave(id) {
+  function toggleSave(e, id) {
+    e.stopPropagation();
     setSaved((prev) => prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]);
   }
 
@@ -61,13 +100,38 @@ export default function Jobs() {
 
   const hasFilters = keyword || location !== "All" || category !== "All" || jobType !== "All";
 
+  if (loading) return (
+    <div className="jobs-state-screen">
+      <div className="jobs-spinner" />
+      <p>Finding the best jobs for you...</p>
+    </div>
+  );
+
+  if (error) return (
+    <div className="jobs-state-screen">
+      <span style={{ fontSize: 40 }}>😕</span>
+      <p style={{ color: "#EF4444" }}>{error}</p>
+      <button className="orange-pill-btn" onClick={fetchJobs}>Retry</button>
+    </div>
+  );
+
   return (
     <div className="jobs-page">
 
-      {/* Top search bar */}
+      {/* Toast */}
+      {applyMsg && (
+        <div className={`apply-toast ${applyMsg.includes("success") ? "success" : "error"}`}>
+          {applyMsg}
+        </div>
+      )}
+
+      {/* Top Search Bar */}
       <div className="jobs-search-bar">
+        <button className="mobile-filter-btn" onClick={() => setSidebarOpen(!sidebarOpen)}>
+          ⚙ Filters {hasFilters && <span className="filter-dot" />}
+        </button>
         <div className="jobs-search-field">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF6B35" strokeWidth="2">
             <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
           </svg>
           <input
@@ -76,12 +140,11 @@ export default function Jobs() {
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
           />
-          {keyword && (
-            <button className="clear-input" onClick={() => setKeyword("")}>✕</button>
-          )}
+          {keyword && <button className="clear-input" onClick={() => setKeyword("")}>✕</button>}
         </div>
+        <div className="search-bar-divider" />
         <div className="jobs-search-field loc">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FF6B35" strokeWidth="2">
             <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
           </svg>
           <select value={location} onChange={(e) => setLocation(e.target.value)}>
@@ -92,8 +155,8 @@ export default function Jobs() {
 
       <div className="jobs-layout">
 
-        {/* Sidebar filters */}
-        <aside className="jobs-sidebar">
+        {/* Sidebar */}
+        <aside className={`jobs-sidebar ${sidebarOpen ? "open" : ""}`}>
           <div className="sidebar-header">
             <span>Filters</span>
             {hasFilters && <button className="clear-btn" onClick={clearFilters}>Clear all</button>}
@@ -102,14 +165,10 @@ export default function Jobs() {
           <div className="filter-group">
             <p className="filter-label">Category</p>
             {CATEGORIES.map((c) => (
-              <button
-                key={c}
-                className={`filter-option ${category === c ? "active" : ""}`}
-                onClick={() => setCategory(c)}
-              >
+              <button key={c} className={`filter-option ${category === c ? "active" : ""}`} onClick={() => setCategory(c)}>
                 {c}
                 <span className="filter-count">
-                  {c === "All" ? ALL_JOBS.length : ALL_JOBS.filter((j) => j.category === c).length}
+                  {c === "All" ? allJobs.length : allJobs.filter((j) => j.category === c).length}
                 </span>
               </button>
             ))}
@@ -118,14 +177,10 @@ export default function Jobs() {
           <div className="filter-group">
             <p className="filter-label">Job Type</p>
             {JOB_TYPES.map((t) => (
-              <button
-                key={t}
-                className={`filter-option ${jobType === t ? "active" : ""}`}
-                onClick={() => setJobType(t)}
-              >
+              <button key={t} className={`filter-option ${jobType === t ? "active" : ""}`} onClick={() => setJobType(t)}>
                 {t}
                 <span className="filter-count">
-                  {t === "All" ? ALL_JOBS.length : ALL_JOBS.filter((j) => j.type === t).length}
+                  {t === "All" ? allJobs.length : allJobs.filter((j) => j.type === t).length}
                 </span>
               </button>
             ))}
@@ -134,26 +189,22 @@ export default function Jobs() {
           <div className="filter-group">
             <p className="filter-label">Location</p>
             {LOCATIONS.map((l) => (
-              <button
-                key={l}
-                className={`filter-option ${location === l ? "active" : ""}`}
-                onClick={() => setLocation(l)}
-              >
+              <button key={l} className={`filter-option ${location === l ? "active" : ""}`} onClick={() => setLocation(l)}>
                 {l}
                 <span className="filter-count">
-                  {l === "All" ? ALL_JOBS.length : ALL_JOBS.filter((j) => j.location === l).length}
+                  {l === "All" ? allJobs.length : allJobs.filter((j) => j.location === l).length}
                 </span>
               </button>
             ))}
           </div>
         </aside>
 
-        {/* Job listings */}
+        {/* Main */}
         <main className="jobs-main">
           <div className="jobs-main-header">
             <span className="results-count">
               <strong>{filtered.length}</strong> job{filtered.length !== 1 ? "s" : ""} found
-              {hasFilters && <span className="filter-tag"> — filtered</span>}
+              {hasFilters && <span className="filter-active-tag">· filtered</span>}
             </span>
             <select className="sort-select" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
               <option value="newest">Newest first</option>
@@ -163,50 +214,76 @@ export default function Jobs() {
 
           {filtered.length === 0 ? (
             <div className="no-results">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-              </svg>
+              <span style={{ fontSize: 52 }}>🔍</span>
               <p>No jobs match your search.</p>
-              <button className="clear-btn-lg" onClick={clearFilters}>Clear filters</button>
+              <button className="orange-pill-btn" onClick={clearFilters}>Clear filters</button>
             </div>
           ) : (
             <div className="jobs-list">
-              {filtered.map((job) => (
-                <div key={job.id} className="job-row" onClick={() => navigate(`/jobs/${job.id}`)}>
-                  <div className="job-row-logo">{job.logo}</div>
-                  <div className="job-row-info">
-                    <div className="job-row-top">
-                      <h3 className="job-row-title">{job.title}</h3>
-                      <span
-                        className="job-row-type"
-                        style={{ color: TYPE_COLORS[job.type], borderColor: TYPE_COLORS[job.type] }}
-                      >
-                        {job.type}
-                      </span>
-                    </div>
-                    <p className="job-row-company">{job.company}</p>
-                    <p className="job-row-desc">{job.description}</p>
-                    <div className="job-row-meta">
-                      <span>📍 {job.location}</span>
-                      <span>💰 {job.salary}</span>
-                      <span>🕒 {job.posted}</span>
-                      <span className="job-row-cat">{job.category}</span>
-                    </div>
-                  </div>
-                  <div className="job-row-actions" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      className={`save-btn ${saved.includes(job.id) ? "saved" : ""}`}
-                      onClick={() => toggleSave(job.id)}
-                      title={saved.includes(job.id) ? "Unsave" : "Save job"}
+              {filtered.map((job, idx) => {
+                const logoColor = LOGO_COLORS[idx % LOGO_COLORS.length];
+                const typeStyle = TYPE_STYLES[job.type] || { bg: "#f1f5f9", color: "#64748b" };
+                const isSaved = saved.includes(job.id);
+                return (
+                  <div key={job.id} className="job-row" onClick={() => navigate(`/jobs/${job.id}`)}>
+                    <div
+                      className="job-row-logo"
+                      style={{ background: logoColor + "18", color: logoColor, borderColor: logoColor + "33" }}
                     >
-                      {saved.includes(job.id) ? "★" : "☆"}
-                    </button>
-                    <button className="apply-now-btn" onClick={() => navigate(`/jobs/${job.id}`)}>
-                      Apply
-                    </button>
+                      {job.logo || job.company?.slice(0, 2).toUpperCase()}
+                    </div>
+
+                    <div className="job-row-info">
+                      <div className="job-row-top">
+                        <h3 className="job-row-title">{job.title}</h3>
+                        <span className="job-row-type" style={{ background: typeStyle.bg, color: typeStyle.color }}>
+                          {job.type}
+                        </span>
+                      </div>
+                      <p className="job-row-company">{job.company}</p>
+                      <p className="job-row-desc">{job.description}</p>
+                      <div className="job-row-meta">
+                        <span className="meta-chip">
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+                          </svg>
+                          {job.location}
+                        </span>
+                        <span className="meta-chip">
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                          </svg>
+                          {job.salary || "Not disclosed"}
+                        </span>
+                        <span className="meta-chip">
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                          </svg>
+                          {job.posted || new Date(job.createdAt).toLocaleDateString()}
+                        </span>
+                        {job.category && <span className="job-row-cat">{job.category}</span>}
+                      </div>
+                    </div>
+
+                    <div className="job-row-actions" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        className={`save-btn ${isSaved ? "saved" : ""}`}
+                        onClick={(e) => toggleSave(e, job.id)}
+                        title={isSaved ? "Unsave" : "Save job"}
+                      >
+                        {isSaved ? "★" : "☆"}
+                      </button>
+                      <button
+                        className="apply-now-btn"
+                        disabled={applying === job.id}
+                        onClick={(e) => handleApply(e, job.id)}
+                      >
+                        {applying === job.id ? "Applying..." : "Apply Now"}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </main>
