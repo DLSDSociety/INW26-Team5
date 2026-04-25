@@ -21,9 +21,9 @@ The project is being built over **3 months** as part of an internship programme 
 | Phase | Description | Status |
 |-------|-------------|--------|
 | Phase 1 | Project setup, Navbar, Home Page, Dark/Light mode | ✅ Complete |
-| Phase 2 | Jobs page — listings, search, filters | 🔄 In Progress |
-| Phase 3 | Login, Register, JWT Authentication | 🔜 Planned |
-| Phase 4 | Role-based Dashboard, Backend API, MongoDB | 🔜 Planned |
+| Phase 2 | Jobs page — listings, search, filters | ✅ Complete  |
+| Phase 3 | Login, Register, JWT Authentication | ✅ Complete |
+| Phase 4 | Role-based Dashboard, Backend API, MongoDB | ✅ Complete  |
 
 ---
 
@@ -58,10 +58,10 @@ JOB_AND_CAREER_PORTAL/
     │   ├── pages/
     │   │   ├── Home.jsx     # ✅ Done
     │   │   ├── Home.css
-    │   │   ├── Jobs.jsx     # 🔄 In progress
-    │   │   ├── Login.jsx    # 🔜 Planned
-    │   │   ├── Register.jsx # 🔜 Planned
-    │   │   ├── Dashboard.jsx# 🔜 Planned
+    │   │   ├── Jobs.jsx     # ✅ Complete 
+    │   │   ├── Login.jsx    # ✅ Complete 
+    │   │   ├── Register.jsx # ✅ Complete 
+    │   │   ├── Dashboard.jsx# ✅ Complete 
     │   │   └── Auth.css
     │   ├── services/
     │   │   └── api.js       # API config (ready for backend)
