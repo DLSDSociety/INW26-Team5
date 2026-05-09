@@ -1,6 +1,28 @@
+[
+  {
+    "name": "Admin User",
+    "email": "admin@test.com",
+    "password": "123456",
+    "role": "admin"
+  },
+  {
+    "name": "Employer test",
+    "email": "employer@test.com",
+    "password": "123456",
+    "role": "Employer"
+  },
+
+
 {
-  "name": "Admin User",
-  "email": "admin@test.com",
+  "name": "Mustafa Azad",
+  "email": "azad@test.com",
   "password": "123456",
-  "role": "admin"
+  "role": "Job Seeker"
 }
+
+
+]
+
+
+
+

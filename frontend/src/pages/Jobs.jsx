@@ -38,7 +38,7 @@ export default function Jobs() {
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState("");
   const [applying, setApplying] = useState(null);
-  const [applyMsg, setApplyMsg] = useState("");
+  const [applyMsg, setApplyMsg] = useState({ text: "", type: "" });
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => { fetchJobs(); }, []);
@@ -60,24 +60,37 @@ export default function Jobs() {
     e.stopPropagation();
     const token = localStorage.getItem("token");
     if (!token) { navigate("/login"); return; }
+
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    if (user.role !== "seeker") {
+      setApplyMsg({ text: "Only job seekers can apply.", type: "error" });
+      setTimeout(() => setApplyMsg({ text: "", type: "" }), 3500);
+      return;
+    }
+
     setApplying(jobId);
-    setApplyMsg("");
+    setApplyMsg({ text: "", type: "" });
     try {
       const res = await fetch(`${API}/applications`, {
         method: "POST",
         headers: authHeaders(),
-        body: JSON.stringify({ jobId: String(jobId) }),
+        body: JSON.stringify({ jobId }),
       });
       const data = await res.json();
-      setApplyMsg(!res.ok ? (data.message || "Failed to apply.") : "Applied successfully! 🎉");
+      if (!res.ok) {
+        setApplyMsg({ text: data.message || "Failed to apply.", type: "error" });
+      } else {
+        setApplyMsg({ text: "Applied successfully! 🎉", type: "success" });
+      }
     } catch {
-      setApplyMsg("Could not connect to server.");
+      setApplyMsg({ text: "Could not connect to server.", type: "error" });
     } finally {
       setApplying(null);
-      setTimeout(() => setApplyMsg(""), 3500);
+      setTimeout(() => setApplyMsg({ text: "", type: "" }), 3500);
     }
   }
 
+  // ← Use _id for sorting (compare ISO date strings instead)
   const filtered = allJobs
     .filter((j) => {
       const kw = keyword.toLowerCase();
@@ -87,7 +100,11 @@ export default function Jobs() {
       const matchType     = jobType  === "All" || j.type     === jobType;
       return matchKeyword && matchLocation && matchCategory && matchType;
     })
-    .sort((a, b) => sortBy === "newest" ? b.id - a.id : a.id - b.id);
+    .sort((a, b) =>
+      sortBy === "newest"
+        ? new Date(b.createdAt) - new Date(a.createdAt)
+        : new Date(a.createdAt) - new Date(b.createdAt)
+    );
 
   function toggleSave(e, id) {
     e.stopPropagation();
@@ -119,9 +136,9 @@ export default function Jobs() {
     <div className="jobs-page">
 
       {/* Toast */}
-      {applyMsg && (
-        <div className={`apply-toast ${applyMsg.includes("success") ? "success" : "error"}`}>
-          {applyMsg}
+      {applyMsg.text && (
+        <div className={`apply-toast ${applyMsg.type}`}>
+          {applyMsg.text}
         </div>
       )}
 
@@ -223,9 +240,9 @@ export default function Jobs() {
               {filtered.map((job, idx) => {
                 const logoColor = LOGO_COLORS[idx % LOGO_COLORS.length];
                 const typeStyle = TYPE_STYLES[job.type] || { bg: "#f1f5f9", color: "#64748b" };
-                const isSaved = saved.includes(job.id);
+                const isSaved   = saved.includes(job._id);    // ← _id
                 return (
-                  <div key={job.id} className="job-row" onClick={() => navigate(`/jobs/${job.id}`)}>
+                  <div key={job._id} className="job-row" onClick={() => navigate(`/jobs/${job._id}`)}>  {/* ← _id */}
                     <div
                       className="job-row-logo"
                       style={{ background: logoColor + "18", color: logoColor, borderColor: logoColor + "33" }}
@@ -259,7 +276,7 @@ export default function Jobs() {
                           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                           </svg>
-                          {job.posted || new Date(job.createdAt).toLocaleDateString()}
+                          {new Date(job.createdAt).toLocaleDateString()}
                         </span>
                         {job.category && <span className="job-row-cat">{job.category}</span>}
                       </div>
@@ -268,17 +285,17 @@ export default function Jobs() {
                     <div className="job-row-actions" onClick={(e) => e.stopPropagation()}>
                       <button
                         className={`save-btn ${isSaved ? "saved" : ""}`}
-                        onClick={(e) => toggleSave(e, job.id)}
+                        onClick={(e) => toggleSave(e, job._id)}   // ← _id
                         title={isSaved ? "Unsave" : "Save job"}
                       >
                         {isSaved ? "★" : "☆"}
                       </button>
                       <button
                         className="apply-now-btn"
-                        disabled={applying === job.id}
-                        onClick={(e) => handleApply(e, job.id)}
+                        disabled={applying === job._id}            // ← _id
+                        onClick={(e) => handleApply(e, job._id)}   // ← _id
                       >
-                        {applying === job.id ? "Applying..." : "Apply Now"}
+                        {applying === job._id ? "Applying..." : "Apply Now"}  {/* ← _id */}
                       </button>
                     </div>
                   </div>

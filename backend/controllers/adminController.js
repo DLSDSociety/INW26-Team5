@@ -1,40 +1,40 @@
-// In-memory references (same arrays used in other controllers)
-const { users } = require('./authController');
-const { jobs } = require('./jobController');
-const { applications } = require('./applicationController');
+const User = require('../models/User');
+const Job = require('../models/Job');
+const Application = require('../models/Application');
 
 // @route GET /api/admin/stats
-const getStats = (req, res) => {
+const getStats = async (req, res) => {
   try {
-    res.json({
-      totalUsers: users.length,
-      totalJobs: jobs.length,
-      totalApplications: applications.length,
-      hires: applications.filter(a => a.status === 'accepted').length,
-    });
+    const [totalUsers, totalJobs, totalApplications, hires] = await Promise.all([
+      User.countDocuments(),
+      Job.countDocuments(),
+      Application.countDocuments(),
+      Application.countDocuments({ status: 'accepted' }),
+    ]);
+
+    res.json({ totalUsers, totalJobs, totalApplications, hires });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
 // @route GET /api/admin/users
-const getAllUsers = (req, res) => {
+const getAllUsers = async (req, res) => {
   try {
-    const safeUsers = users.map(({ password, ...rest }) => rest);
-    res.json({ count: safeUsers.length, users: safeUsers });
+    const users = await User.find().select('-password').sort({ createdAt: -1 });
+    res.json({ count: users.length, users });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
 // @route DELETE /api/admin/users/:id
-const deleteUser = (req, res) => {
+const deleteUser = async (req, res) => {
   try {
-    const index = users.findIndex(u => u.id === req.params.id);
-    if (index === -1) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    users.splice(index, 1);
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    await user.deleteOne();
     res.json({ message: 'User deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -42,8 +42,9 @@ const deleteUser = (req, res) => {
 };
 
 // @route GET /api/admin/jobs
-const getAllJobs = (req, res) => {
+const getAllJobs = async (req, res) => {
   try {
+    const jobs = await Job.find().sort({ createdAt: -1 });
     res.json({ count: jobs.length, jobs });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -51,13 +52,12 @@ const getAllJobs = (req, res) => {
 };
 
 // @route DELETE /api/admin/jobs/:id
-const deleteJob = (req, res) => {
+const deleteJob = async (req, res) => {
   try {
-    const index = jobs.findIndex(j => j.id === req.params.id);
-    if (index === -1) {
-      return res.status(404).json({ message: 'Job not found' });
-    }
-    jobs.splice(index, 1);
+    const job = await Job.findById(req.params.id);
+    if (!job) return res.status(404).json({ message: 'Job not found' });
+
+    await job.deleteOne();
     res.json({ message: 'Job deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -65,19 +65,13 @@ const deleteJob = (req, res) => {
 };
 
 // @route GET /api/admin/applications
-const getAllApplications = (req, res) => {
+const getAllApplications = async (req, res) => {
   try {
+    const applications = await Application.find().sort({ appliedAt: -1 });
     res.json({ count: applications.length, applications });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
-module.exports = {
-  getStats,
-  getAllUsers,
-  deleteUser,
-  getAllJobs,
-  deleteJob,
-  getAllApplications,
-};
+module.exports = { getStats, getAllUsers, deleteUser, getAllJobs, deleteJob, getAllApplications };

@@ -1,8 +1,14 @@
+
+
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const path = require('path');
+const connectDB = require('./config/db');   
+const recommendRoutes = require('./routes/recommendRoutes');
 
 dotenv.config();
+connectDB();                                
 
 const app = express();
 
@@ -11,19 +17,19 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-const authRoutes = require('./routes/authRoutes');
-const jobRoutes = require('./routes/jobRoutes');
+const authRoutes        = require('./routes/authRoutes');
+const jobRoutes         = require('./routes/jobRoutes');
 const applicationRoutes = require('./routes/applicationRoutes');
-const adminRoutes = require('./routes/adminRoutes');
-const resumeRoutes = require('./routes/resumeRoutes');
-const path = require('path');
+const adminRoutes       = require('./routes/adminRoutes');
+const resumeRoutes      = require('./routes/resumeRoutes');
 
-app.use('/api/auth', authRoutes);
-app.use('/api/jobs', jobRoutes);
+app.use('/api/auth',         authRoutes);
+app.use('/api/jobs',         jobRoutes);
 app.use('/api/applications', applicationRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/resume', resumeRoutes);
+app.use('/api/admin',        adminRoutes);
+app.use('/api/resume',       resumeRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/api/recommend', recommendRoutes);
 
 // Health check
 app.get('/', (req, res) => {
@@ -37,5 +43,5 @@ app.use((req, res) => {
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });

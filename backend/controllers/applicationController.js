@@ -1,72 +1,74 @@
-// In-memory applications store (replace with MongoDB later)
-const applications = [];
+
+const Application = require('../models/Application');
+const Job = require('../models/Job');
 
 // @route  POST /api/applications  [seeker only]
-const applyJob = (req, res) => {
+const applyJob = async (req, res) => {
   try {
     const { jobId } = req.body;
 
-    if (!jobId) {
-      return res.status(400).json({ message: 'Job ID is required' });
-    }
+    if (!jobId) return res.status(400).json({ message: 'Job ID is required' });
 
-    // Check if already applied
-    const alreadyApplied = applications.find(
-      (app) => app.jobId === jobId && app.seekerId === req.user.id
-    );
+    const job = await Job.findById(jobId);
+    if (!job) return res.status(404).json({ message: 'Job not found' });
+
+    const alreadyApplied = await Application.findOne({ jobId, seekerId: req.user.id });
     if (alreadyApplied) {
       return res.status(400).json({ message: 'You have already applied for this job' });
     }
 
-    const newApplication = {
-      id: Date.now().toString(),
+    const application = await Application.create({
       jobId,
-      seekerId: req.user.id,
-      seekerName: req.user.name,
+      seekerId:    req.user.id,
+      seekerName:  req.user.name,
       seekerEmail: req.user.email,
-      status: 'pending',
-      appliedAt: new Date().toISOString(),
-    };
-
-    applications.push(newApplication);
-
-    res.status(201).json({
-      message: 'Application submitted successfully',
-      application: newApplication,
+      status:      'pending',
     });
+
+    res.status(201).json({ message: 'Application submitted successfully', application });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
 // @route  GET /api/applications/me  [seeker only]
-const getMyApplications = (req, res) => {
-  try {
-    const myApps = applications.filter(
-      (app) => app.seekerId === req.user.id
-    );
+// const getMyApplications = async (req, res) => {
+//   try {
+//     const applications = await Application.find({ seekerId: req.user.id })
+//       .sort({ appliedAt: -1 });
 
-    res.json({ count: myApps.length, applications: myApps });
+//     res.json({ count: applications.length, applications });
+//   } catch (error) {
+//     res.status(500).json({ message: 'Server error', error: error.message });
+//   }
+// };
+
+const getMyApplications = async (req, res) => {
+  try {
+    const applications = await Application.find({ seekerId: req.user.id })
+      .populate('jobId', 'title company location type')
+      .sort({ appliedAt: -1 });
+
+    res.json({ count: applications.length, applications });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
 // @route  GET /api/applications/job/:id  [employer only]
-const getApplicantsByJob = (req, res) => {
+const getApplicantsByJob = async (req, res) => {
   try {
-    const jobApps = applications.filter(
-      (app) => app.jobId === req.params.id
-    );
+    const applications = await Application.find({ jobId: req.params.id })
+      .sort({ appliedAt: -1 });
 
-    res.json({ count: jobApps.length, applications: jobApps });
+    res.json({ count: applications.length, applications });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
 // @route  PUT /api/applications/:id  [employer only]
-const updateApplicationStatus = (req, res) => {
+const updateApplicationStatus = async (req, res) => {
   try {
     const { status } = req.body;
 
@@ -75,20 +77,16 @@ const updateApplicationStatus = (req, res) => {
       return res.status(400).json({ message: 'Invalid status value' });
     }
 
-    const index = applications.findIndex((app) => app.id === req.params.id);
-    if (index === -1) {
-      return res.status(404).json({ message: 'Application not found' });
-    }
+    const application = await Application.findById(req.params.id);
+    if (!application) return res.status(404).json({ message: 'Application not found' });
 
-    applications[index].status = status;
+    application.status = status;
+    await application.save();
 
-    res.json({
-      message: 'Application status updated',
-      application: applications[index],
-    });
+    res.json({ message: 'Application status updated', application });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
-module.exports = { applyJob, getMyApplications, getApplicantsByJob, updateApplicationStatus, applications };
+module.exports = { applyJob, getMyApplications, getApplicantsByJob, updateApplicationStatus };
