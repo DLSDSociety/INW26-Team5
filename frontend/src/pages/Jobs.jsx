@@ -242,7 +242,7 @@ export default function Jobs() {
                 const typeStyle = TYPE_STYLES[job.type] || { bg: "#f1f5f9", color: "#64748b" };
                 const isSaved   = saved.includes(job._id);    // ← _id
                 return (
-                  <div key={job._id} className="job-row" onClick={() => navigate(`/jobs/${job._id}`)}>  {/* ← _id */}
+                  <div key={job._id} className="job-row">  {/* ← Row navigation turned off */}
                     <div
                       className="job-row-logo"
                       style={{ background: logoColor + "18", color: logoColor, borderColor: logoColor + "33" }}

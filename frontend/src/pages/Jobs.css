@@ -239,7 +239,7 @@
   border: 1.5px solid var(--border);
   border-radius: 14px;
   padding: 20px 22px;
-  cursor: pointer;
+  cursor: default;
   transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
 }
 .job-row:hover {

@@ -35,9 +35,10 @@ The project is being built over **3 months** as part of an internship programme 
 | Routing | React Router DOM v6 |
 | State / Theme | React Context API |
 | Styling | CSS (custom properties, dark/light mode) |
-| Backend *(planned)* | Node.js + Express |
-| Database *(planned)* | MongoDB |
-| Authentication *(planned)* | JWT (JSON Web Tokens) |
+| Backend | Node.js + Express |
+| Database | MongoDB |
+| Authentication | JWT (JSON Web Tokens) |
+| AI Services | Google Gemini API (Resume Analysis & Matching) |
 
 ---
 
@@ -45,34 +46,40 @@ The project is being built over **3 months** as part of an internship programme 
 
 ```
 JOB_AND_CAREER_PORTAL/
-└── frontend/
-    ├── public/
-    ├── src/
-    │   ├── assets/          # Images, logos
-    │   ├── components/
-    │   │   ├── Navbar.jsx   # ✅ Done
-    │   │   └── Navbar.css
-    │   ├── context/
-    │   │   └── ThemeContext.jsx  # ✅ Dark/Light mode
-    │   ├── hooks/
-    │   ├── pages/
-    │   │   ├── Home.jsx     # ✅ Done
-    │   │   ├── Home.css
-    │   │   ├── Jobs.jsx     # ✅ Complete 
-    │   │   ├── Login.jsx    # ✅ Complete 
-    │   │   ├── Register.jsx # ✅ Complete 
-    │   │   ├── Dashboard.jsx# ✅ Complete 
-    │   │   └── Auth.css
-    │   ├── services/
-    │   │   └── api.js       # API config (ready for backend)
-    │   ├── util/
-    │   ├── App.jsx          # ✅ Routes configured
-    │   ├── App.css
-    │   ├── index.css        # CSS variables (theme)
-    │   └── main.jsx         # ✅ ThemeProvider wrapped
-    ├── index.html
-    ├── package.json
-    └── vite.config.js
+├── backend/
+│   ├── controllers/
+│   ├── models/
+│   ├── routes/
+│   ├── middleware/
+│   ├── server.js
+│   └── .env
+├── frontend/
+│   ├── public/
+│   ├── src/
+│   │   ├── assets/          # Images, logos
+│   │   ├── components/
+│   │   │   ├── Navbar.jsx   # ✅ Done
+│   │   │   └── Navbar.css
+│   │   ├── context/
+│   │   │   └── ThemeContext.jsx  # ✅ Dark/Light mode
+│   │   ├── hooks/
+│   │   ├── pages/
+│   │   │   ├── Home.jsx     # ✅ Done
+│   │   │   ├── Home.css
+│   │   │   ├── Jobs.jsx     # ✅ Complete 
+│   │   │   ├── Login.jsx    # ✅ Complete 
+│   │   │   ├── Register.jsx # ✅ Complete 
+│   │   │   ├── Dashboard.jsx# ✅ Complete 
+│   │   │   └── Auth.css
+│   │   ├── services/
+│   │   │   └── api.js       # API config
+│   │   ├── App.jsx          # ✅ Routes configured
+│   │   ├── App.css
+│   │   ├── index.css        # CSS variables (theme)
+│   │   └── main.jsx         # ✅ ThemeProvider wrapped
+│   ├── index.html
+│   ├── package.json
+│   └── vite.config.js
 ```
 
 ---
@@ -122,17 +129,19 @@ JOB_AND_CAREER_PORTAL/
 # Clone the repository
 git clone https://github.com/your-username/job-portal.git
 
-# Navigate to frontend
-cd job-portal/frontend
-
-# Install dependencies
+# 1. Setup Backend
+cd job-portal/backend
 npm install
+# Create a .env file based on the environment requirements (MongoDB URI, JWT Secret, Gemini API Key, SMTP configs)
+npm run dev
 
-# Start the dev server
+# 2. Setup Frontend (in a new terminal)
+cd job-portal/frontend
+npm install
 npm run dev
 ```
 
-The app will run at **http://localhost:5173**
+The frontend app will run at **http://localhost:5173** and the backend at **http://localhost:5000**
 
 ---
 
@@ -148,26 +157,28 @@ The app will run at **http://localhost:5173**
 
 ---
 
-## 🔜 Next Steps (Phase 2–4)
+## 🏆 Features Completed (Phases 2-4)
 
 ### Phase 2 — Jobs Page 
-- Full job listings with search and filters
-- Job detail page
-- Save / unsave jobs
-- Employer job CRUD API
+- Full job listings with advanced search and category filters
+- Smooth redirection from Home page components (Featured jobs, categories)
+- Employer job creation (CRUD operations)
 
-### Phase 3 — Auth 
-- Login and Register forms
-- JWT authentication
-- Role-based access control (Seeker / Employer / Admin)
-- Protected routes
+### Phase 3 — Auth & Core Backend
+- Secure Login and Register forms with validation
+- JWT authentication with HTTP cookies/headers
+- Role-based access control (Job Seeker, Employer, Admin)
+- Full Node.js + Express REST API with MongoDB database integration
 
-### Phase 4 — Dashboard + Backend 
-- Seeker dashboard: applications, saved jobs, profile strength
-- Employer dashboard: posted jobs, applicants
-- Admin dashboard: user management, flagged jobs
-- Node.js + Express REST API
-- MongoDB database integration
+### Phase 4 — Dashboards & Advanced Features
+- **Job Seeker Dashboard:** 
+  - Dynamic tab-based navigation (Overview, Applications, Jobs, Resume, Profile, Notifications)
+  - Real-time application tracking with color-coded status badges
+  - **AI Resume Matcher:** Upload resume to get a score and AI-powered job recommendations
+  - **Live Notifications:** Feed for application status updates (Shortlisted, Interview, Accepted, Rejected) with notification counter badges
+- **Employer Dashboard:** Job posting modal, view applicants per job, update applicant statuses (triggering emails & notifications)
+- **Admin Dashboard:** Platform statistics and user management
+- **Responsive Design:** Mobile-first sliding sidebar with overlay and hamburger menu for dashboards
 
 ---
 

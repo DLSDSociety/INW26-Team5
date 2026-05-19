@@ -169,14 +169,36 @@ function ResumeUpload() {
 }
 
 // ─── Seeker Dashboard ─────────────────────────────────────────
-function SeekerDashboard({ user, data }) {
-  const navigate = useNavigate();
+function SeekerDashboard({ user, data, activeTab, onTabChange, navigate }) {
   const applications = data?.applications || [];
 
   const [recommendations, setRecommendations] = useState([]);
   const [recLoading,      setRecLoading]      = useState(false);
   const [recError,        setRecError]        = useState("");
   const [recFetched,      setRecFetched]      = useState(false);
+
+  // Resume Analysis
+  const [analysis,        setAnalysis]        = useState(null);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
+  const [analysisError,   setAnalysisError]   = useState("");
+
+  async function fetchAnalysis() {
+    setAnalysisLoading(true);
+    setAnalysisError("");
+    try {
+      const res  = await fetch(`${API}/resume/analyze`, { headers: authHeaders() });
+      const json = await res.json();
+      if (res.ok) {
+        setAnalysis(json.analysis);
+      } else {
+        setAnalysisError(json.message || "Analysis failed.");
+      }
+    } catch {
+      setAnalysisError("Could not connect to server.");
+    } finally {
+      setAnalysisLoading(false);
+    }
+  }
 
   async function fetchRecommendations() {
     setRecLoading(true);
@@ -211,187 +233,318 @@ function SeekerDashboard({ user, data }) {
 
   return (
     <>
-      {/* ── Stats row ── */}
-      <div className="stats-row">
-        {[
-          { label: "Applied",  value: applications.length },
-          { label: "Reviewed", value: applications.filter(a => a.status === "reviewed").length },
-          { label: "Accepted", value: applications.filter(a => a.status === "accepted").length },
-          { label: "Rejected", value: applications.filter(a => a.status === "rejected").length },
-        ].map((s) => (
-          <div key={s.label} className="stat-card">
-            <strong>{s.value}</strong>
-            <span>{s.label}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* ── AI Recommendations ── */}
-      <div className="dash-panel" style={{ marginBottom: "1.5rem" }}>
-        <div className="panel-header" style={{ marginBottom: "1rem" }}>
-          <h2 style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-             AI Job Recommendations
-          </h2>
-          <button
-            className="panel-btn"
-            onClick={fetchRecommendations}
-            disabled={recLoading}
-            style={{ minWidth: "160px" }}
-          >
-            {recLoading ? "Analyzing..." : recFetched ? "🔄 Refresh" : " Match My Resume"}
-          </button>
-        </div>
-
-        {!recFetched && !recLoading && (
-          <div style={{
-            textAlign: "center", padding: "2rem",
-            background: "var(--cream)", borderRadius: "12px",
-            border: "2px dashed var(--border)",
-          }}>
-            <div style={{ fontSize: "2.5rem", marginBottom: "0.75rem" }}>🎯</div>
-            <p style={{ fontWeight: 600, marginBottom: "0.25rem", color: "var(--dark)" }}>
-              Find your perfect job match
-            </p>
-            <p style={{ fontSize: "13px", color: "var(--muted)", marginBottom: "1rem" }}>
-              Upload your resume and click "Match My Resume" to get AI-powered job recommendations
-            </p>
-            <button
-              className="panel-btn"
-              onClick={fetchRecommendations}
-              style={{ background: "var(--orange)", color: "#fff", border: "none" }}
-            >
-               Match My Resume
-            </button>
-          </div>
-        )}
-
-        {recLoading && (
-          <div style={{ textAlign: "center", padding: "2rem" }}>
-            <div style={{ fontSize: "2rem", marginBottom: "0.75rem" }}>⏳</div>
-            <p style={{ color: "var(--muted)", fontSize: "14px" }}>
-              AI is analyzing your resume and matching jobs...
-            </p>
-          </div>
-        )}
-
-        {recError && (
-          <div style={{
-            padding: "1rem", borderRadius: "10px",
-            background: "rgba(239,68,68,0.08)",
-            border: "1px solid rgba(239,68,68,0.2)",
-            color: "#ef4444", fontSize: "14px", textAlign: "center",
-          }}>
-            {recError}
-          </div>
-        )}
-
-        {recFetched && !recLoading && recommendations.length > 0 && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-            {recommendations.map((rec) => (
-              <div key={rec.jobId} style={{
-                display: "flex", alignItems: "flex-start",
-                gap: "1rem", padding: "1rem 1.25rem",
-                background: "var(--cream)", borderRadius: "12px",
-                border: "1px solid var(--border)",
-              }}>
-                <div style={{
-                  minWidth: "56px", height: "56px", borderRadius: "50%",
-                  border: `3px solid ${scoreColor(rec.score)}`,
-                  display: "flex", flexDirection: "column",
-                  alignItems: "center", justifyContent: "center",
-                  background: "#fff",
-                }}>
-                  <strong style={{ fontSize: "15px", color: scoreColor(rec.score), lineHeight: 1 }}>
-                    {rec.score}
-                  </strong>
-                  <span style={{ fontSize: "9px", color: "var(--muted)" }}>/ 100</span>
-                </div>
-
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap", marginBottom: "0.25rem" }}>
-                    <strong style={{ fontSize: "15px", color: "var(--dark)" }}>{rec.title}</strong>
-                    <span style={{
-                      fontSize: "11px", fontWeight: 600, padding: "2px 8px",
-                      borderRadius: "20px", color: "#fff",
-                      background: scoreColor(rec.score),
-                    }}>
-                      {scoreLabel(rec.score)}
-                    </span>
-                  </div>
-                  <p style={{ fontSize: "13px", color: "var(--muted)", margin: "0 0 0.4rem" }}>
-                    {rec.company} · {rec.location} · {rec.type}
-                  </p>
-                  <p style={{ fontSize: "13px", color: "var(--dark)", margin: 0, lineHeight: 1.5 }}>
-                    {rec.reason}
-                  </p>
-                </div>
-
-                <button
-                  className="panel-btn"
-                  onClick={() => navigate("/jobs")}
-                  style={{ whiteSpace: "nowrap", alignSelf: "center" }}
-                >
-                  View Job →
-                </button>
+      {/* ── Overview ── */}
+      {activeTab === "Overview" && (
+        <>
+          <div className="stats-row">
+            {[
+              { label: "Applied",  value: applications.length },
+              { label: "Reviewed", value: applications.filter(a => a.status === "reviewed").length },
+              { label: "Accepted", value: applications.filter(a => a.status === "accepted").length },
+              { label: "Rejected", value: applications.filter(a => a.status === "rejected").length },
+            ].map((s) => (
+              <div key={s.label} className="stat-card">
+                <strong>{s.value}</strong>
+                <span>{s.label}</span>
               </div>
             ))}
           </div>
-        )}
-      </div>
 
-      {/* ── Bottom grid ── */}
-      <div className="dash-grid">
-        <div className="dash-panel wide">
+          {/* AI Recommendations */}
+          <div className="dash-panel" style={{ marginBottom: "1.5rem" }}>
+            <div className="panel-header" style={{ marginBottom: "1rem" }}>
+              <h2>🎯 AI Job Recommendations</h2>
+              <button className="panel-btn" onClick={fetchRecommendations} disabled={recLoading} style={{ minWidth: "140px" }}>
+                {recLoading ? "Analyzing..." : recFetched ? "🔄 Refresh" : "Match My Resume"}
+              </button>
+            </div>
+            {!recFetched && !recLoading && (
+              <div style={{ textAlign:"center", padding:"2rem", background:"var(--cream)", borderRadius:"12px", border:"2px dashed var(--border)" }}>
+                <div style={{ fontSize:"2.5rem", marginBottom:"0.75rem" }}>🎯</div>
+                <p style={{ fontWeight:600, marginBottom:"0.25rem", color:"var(--dark)" }}>Find your perfect job match</p>
+                <p style={{ fontSize:"13px", color:"var(--muted)", marginBottom:"1rem" }}>Upload your resume and click "Match My Resume" to get AI-powered recommendations</p>
+                <button className="panel-btn" onClick={fetchRecommendations}>Match My Resume</button>
+              </div>
+            )}
+            {recLoading && <div style={{ textAlign:"center", padding:"2rem" }}><div style={{ fontSize:"2rem" }}>⏳</div><p style={{ color:"var(--muted)", fontSize:"14px", marginTop:"0.5rem" }}>AI is analyzing your resume...</p></div>}
+            {recError && <div style={{ padding:"1rem", borderRadius:"10px", background:"rgba(239,68,68,0.08)", color:"#ef4444", fontSize:"14px", textAlign:"center" }}>{recError}</div>}
+            {recFetched && !recLoading && recommendations.length > 0 && (
+              <div style={{ display:"flex", flexDirection:"column", gap:"0.75rem" }}>
+                {recommendations.map((rec) => (
+                  <div key={rec.jobId} style={{ display:"flex", alignItems:"flex-start", gap:"1rem", padding:"1rem 1.25rem", background:"var(--cream)", borderRadius:"12px", border:"1px solid var(--border)", flexWrap:"wrap" }}>
+                    <div style={{ minWidth:"56px", height:"56px", borderRadius:"50%", border:`3px solid ${scoreColor(rec.score)}`, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", background:"#fff" }}>
+                      <strong style={{ fontSize:"15px", color:scoreColor(rec.score), lineHeight:1 }}>{rec.score}</strong>
+                      <span style={{ fontSize:"9px", color:"var(--muted)" }}>/ 100</span>
+                    </div>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:"0.5rem", flexWrap:"wrap", marginBottom:"0.25rem" }}>
+                        <strong style={{ fontSize:"15px", color:"var(--dark)" }}>{rec.title}</strong>
+                        <span style={{ fontSize:"11px", fontWeight:600, padding:"2px 8px", borderRadius:"20px", color:"#fff", background:scoreColor(rec.score) }}>{scoreLabel(rec.score)}</span>
+                      </div>
+                      <p style={{ fontSize:"13px", color:"var(--muted)", margin:"0 0 0.4rem" }}>{rec.company} · {rec.location} · {rec.type}</p>
+                      <p style={{ fontSize:"13px", color:"var(--dark)", margin:0, lineHeight:1.5 }}>{rec.reason}</p>
+                    </div>
+                    <button className="panel-btn" onClick={() => navigate("/jobs")} style={{ whiteSpace:"nowrap", alignSelf:"center" }}>View Job →</button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Quick stats bottom */}
+          <div className="dash-grid">
+            <div className="dash-panel wide">
+              <div className="panel-header"><h2>Recent Applications</h2><button className="panel-link" onClick={() => onTabChange("Applications")}>View all →</button></div>
+              <div className="app-list">
+                {applications.length === 0
+                  ? <p style={{ color:"var(--muted)", padding:"1rem 0" }}>No applications yet. <span style={{ color:"var(--orange)", cursor:"pointer" }} onClick={() => navigate("/jobs")}>Browse jobs →</span></p>
+                  : applications.slice(0,5).map((app) => (
+                    <div key={app._id} className="app-row">
+                      <Avatar initials={app.seekerName?.slice(0,2).toUpperCase() || "JB"} />
+                      <div className="app-info">
+                        <strong>{app.jobId?.title || "Job Title Unavailable"}</strong>
+                        <span>{app.jobId?.company} · {app.jobId?.location}</span>
+                        <span>Applied {new Date(app.appliedAt).toLocaleDateString()}</span>
+                      </div>
+                      <StatusBadge status={app.status} />
+                    </div>
+                  ))
+                }
+              </div>
+            </div>
+            <div className="dash-col">
+              <div className="dash-panel">
+                <div className="panel-header"><h2>Quick Actions</h2></div>
+                <div style={{ display:"flex", flexDirection:"column", gap:"0.5rem" }}>
+                  <button className="panel-btn" onClick={() => navigate("/jobs")}>🔍 Browse Jobs</button>
+                  <button className="panel-btn" onClick={() => onTabChange("Resume")} style={{ background:"linear-gradient(135deg,#7c3aed,#5b21b6)" }}>📄 My Resume</button>
+                  <button className="panel-btn" onClick={fetchRecommendations} disabled={recLoading} style={{ background:"#0ea5e9" }}>🎯 AI Match</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Applications Tab ── */}
+      {activeTab === "Applications" && (
+        <div className="dash-panel">
           <div className="panel-header">
             <h2>My Applications</h2>
             <button className="panel-link" onClick={() => navigate("/jobs")}>Browse more →</button>
           </div>
           <div className="app-list">
-            {applications.length === 0 ? (
-              <p style={{ color: "var(--muted)", padding: "1rem 0" }}>
-                You haven't applied to any jobs yet.{" "}
-                <span style={{ color: "var(--orange)", cursor: "pointer" }} onClick={() => navigate("/jobs")}>
-                  Browse jobs →
-                </span>
-              </p>
-            ) : (
-              applications.map((app) => (
+            {applications.length === 0
+              ? <p style={{ color:"var(--muted)", padding:"1.5rem 0", textAlign:"center" }}>You haven't applied to any jobs yet. <span style={{ color:"var(--orange)", cursor:"pointer" }} onClick={() => navigate("/jobs")}>Browse jobs →</span></p>
+              : applications.map((app) => (
                 <div key={app._id} className="app-row">
-                  <Avatar initials={app.seekerName?.slice(0, 2).toUpperCase() || "JB"} />
+                  <Avatar initials={app.seekerName?.slice(0,2).toUpperCase() || "JB"} />
                   <div className="app-info">
                     <strong>{app.jobId?.title || "Job Title Unavailable"}</strong>
-                    <span style={{ fontSize: "12px", color: "var(--muted)" }}>
-                      {app.jobId?.company} · {app.jobId?.location}
-                    </span>
+                    <span style={{ fontSize:"12px", color:"var(--muted)" }}>{app.jobId?.company} · {app.jobId?.location}</span>
                     <span>Applied on {new Date(app.appliedAt).toLocaleDateString()}</span>
                   </div>
                   <StatusBadge status={app.status} />
                 </div>
               ))
-            )}
+            }
           </div>
         </div>
+      )}
 
+      {/* ── Jobs Tab ── */}
+      {activeTab === "Jobs" && (
+        <div className="dash-panel" style={{ textAlign:"center", padding:"3rem 2rem" }}>
+          <div style={{ fontSize:"3rem", marginBottom:"1rem" }}>💼</div>
+          <h2 style={{ marginBottom:"0.5rem", color:"var(--dark)" }}>Find Your Next Job</h2>
+          <p style={{ color:"var(--muted)", marginBottom:"1.5rem", fontSize:"14px" }}>Browse thousands of curated tech jobs across India</p>
+          <button className="panel-btn" onClick={() => navigate("/jobs")} style={{ fontSize:"14px", padding:"10px 28px" }}>Browse All Jobs →</button>
+        </div>
+      )}
+
+      {/* ── Resume Tab ── */}
+      {activeTab === "Resume" && (
         <div className="dash-col">
           <div className="dash-panel">
-            <div className="panel-header"><h2>Resume</h2></div>
+            <div className="panel-header"><h2>📄 My Resume</h2></div>
             <ResumeUpload />
+            <button className="panel-btn" onClick={fetchAnalysis} disabled={analysisLoading}
+              style={{ width:"100%", marginTop:"0.75rem", background:"linear-gradient(135deg,#7c3aed,#5b21b6)", color:"#fff", border:"none" }}>
+              {analysisLoading ? "🔍 Analyzing..." : "📊 Analyze Resume with AI"}
+            </button>
+            {analysisError && <p style={{ color:"#ef4444", fontSize:"13px", textAlign:"center", marginTop:"0.5rem" }}>{analysisError}</p>}
           </div>
+
+          {analysis && (
+            <div className="dash-panel" style={{ border:"1.5px solid rgba(124,58,237,0.3)", background:"rgba(124,58,237,0.04)" }}>
+              <div className="panel-header" style={{ marginBottom:"1rem" }}>
+                <h2 style={{ color:"#7c3aed" }}>📊 Resume Analysis</h2>
+              </div>
+              <div style={{ display:"flex", alignItems:"center", gap:"1rem", marginBottom:"1rem", flexWrap:"wrap" }}>
+                <div style={{ width:72, height:72, borderRadius:"50%", border:`4px solid ${analysis.score>=75?"#22c55e":analysis.score>=50?"#f59e0b":"#ef4444"}`, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", background:"#fff", flexShrink:0 }}>
+                  <strong style={{ fontSize:20, color:analysis.score>=75?"#22c55e":analysis.score>=50?"#f59e0b":"#ef4444", lineHeight:1 }}>{analysis.score}</strong>
+                  <span style={{ fontSize:10, color:"#94a3b8" }}>/ 100</span>
+                </div>
+                <div><div style={{ fontSize:18, fontWeight:700, color:"#0f172a" }}>Grade: {analysis.grade}</div><p style={{ margin:0, fontSize:13, color:"#475569", lineHeight:1.5 }}>{analysis.summary}</p></div>
+              </div>
+              <div style={{ marginBottom:"0.75rem" }}>
+                <p style={{ fontWeight:600, color:"#16a34a", fontSize:13, marginBottom:"0.4rem" }}>✅ Strengths</p>
+                {analysis.strengths?.map((s,i) => <div key={i} style={{ display:"flex", gap:"0.4rem", marginBottom:"0.25rem" }}><span style={{ color:"#22c55e" }}>•</span><span style={{ fontSize:13, color:"#334155" }}>{s}</span></div>)}
+              </div>
+              <div style={{ marginBottom:"0.75rem" }}>
+                <p style={{ fontWeight:600, color:"#dc2626", fontSize:13, marginBottom:"0.4rem" }}>⚠️ Areas to Improve</p>
+                {analysis.weaknesses?.map((w,i) => <div key={i} style={{ display:"flex", gap:"0.4rem", marginBottom:"0.25rem" }}><span style={{ color:"#ef4444" }}>•</span><span style={{ fontSize:13, color:"#334155" }}>{w}</span></div>)}
+              </div>
+              {analysis.ats_tips?.length > 0 && (
+                <div style={{ background:"rgba(59,130,246,0.07)", borderRadius:8, padding:"0.75rem", border:"1px solid rgba(59,130,246,0.15)" }}>
+                  <p style={{ fontWeight:600, color:"#2563eb", fontSize:13, marginBottom:"0.4rem" }}>💡 ATS Tips</p>
+                  {analysis.ats_tips.map((t,i) => <div key={i} style={{ display:"flex", gap:"0.4rem", marginBottom:"0.25rem" }}><span style={{ color:"#3b82f6" }}>→</span><span style={{ fontSize:13, color:"#334155" }}>{t}</span></div>)}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Profile Tab ── */}
+      {activeTab === "Profile" && (
+        <div className="dash-panel" style={{ maxWidth:520 }}>
+          <div className="panel-header"><h2>👤 My Profile</h2></div>
+          <div style={{ display:"flex", flexDirection:"column", gap:"1rem" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:"1rem" }}>
+              <Avatar initials={user.name?.slice(0,2).toUpperCase() || "U"} size={56} />
+              <div>
+                <div style={{ fontWeight:700, fontSize:16, color:"var(--dark)" }}>{user.name}</div>
+                <div style={{ fontSize:13, color:"var(--muted)" }}>{user.email}</div>
+                <span className="user-role-badge">Job Seeker</span>
+              </div>
+            </div>
+            <div style={{ background:"var(--cream)", borderRadius:10, padding:"1rem", border:"1px solid var(--border)" }}>
+              <p style={{ fontSize:13, color:"var(--muted)" }}>Profile editing coming soon. Your data is securely stored.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Notifications Tab ── */}
+      {activeTab === "Notifications" && (() => {
+        // Build notification list from applications
+        const notifs = [];
+
+        // Status-change notifications from applications
+        applications.forEach((app) => {
+          const title = app.jobId?.title || "a job";
+          const company = app.jobId?.company || "";
+          const date = new Date(app.updatedAt || app.appliedAt);
+
+          const statusMap = {
+            accepted:    { icon: "🎉", color: "#16a34a", bg: "rgba(34,197,94,0.08)",  border: "rgba(34,197,94,0.2)",  text: `Congratulations! Your application for ${title}${company ? ` at ${company}` : ""} has been accepted.` },
+            rejected:    { icon: "❌", color: "#dc2626", bg: "rgba(220,38,38,0.07)",  border: "rgba(220,38,38,0.2)",  text: `Your application for ${title}${company ? ` at ${company}` : ""} was not selected this time.` },
+            shortlisted: { icon: "⭐", color: "#d97706", bg: "rgba(245,158,11,0.08)", border: "rgba(245,158,11,0.2)", text: `You've been shortlisted for ${title}${company ? ` at ${company}` : ""}!` },
+            reviewed:    { icon: "👁",  color: "#3b82f6", bg: "rgba(59,130,246,0.07)", border: "rgba(59,130,246,0.2)", text: `Your application for ${title} has been reviewed.` },
+            Interview:   { icon: "📅", color: "#7c3aed", bg: "rgba(124,58,237,0.08)", border: "rgba(124,58,237,0.2)", text: `You've been invited to interview for ${title}${company ? ` at ${company}` : ""}!` },
+            pending:     { icon: "📨", color: "#64748b", bg: "rgba(100,116,139,0.06)", border: "rgba(100,116,139,0.2)", text: `Application submitted for ${title}${company ? ` at ${company}` : ""}.` },
+          };
+
+          const cfg = statusMap[app.status] || statusMap["pending"];
+          notifs.push({ ...cfg, date, id: app._id, status: app.status });
+        });
+
+        // Sort newest first
+        notifs.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        function timeAgo(date) {
+          const diff = Math.floor((Date.now() - new Date(date)) / 1000);
+          if (diff < 60)   return "just now";
+          if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+          if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+          return `${Math.floor(diff/86400)}d ago`;
+        }
+
+        return (
           <div className="dash-panel">
-            <div className="panel-header"><h2>Quick Actions</h2></div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-              <button className="panel-btn" onClick={() => navigate("/jobs")}>🔍 Browse Jobs</button>
-              <button className="panel-btn" onClick={fetchRecommendations} disabled={recLoading}>
-                {recLoading ? "Analyzing..." : " AI Match"}
+            <div className="panel-header">
+              <h2>🔔 Notifications</h2>
+              {notifs.length > 0 && (
+                <span style={{ fontSize:12, fontWeight:600, padding:"2px 10px", borderRadius:999, background:"rgba(255,107,53,0.12)", color:"var(--orange)" }}>
+                  {notifs.length} update{notifs.length !== 1 ? "s" : ""}
+                </span>
+              )}
+            </div>
+
+            {notifs.length === 0 ? (
+              <div style={{ textAlign:"center", padding:"3rem 1rem", color:"var(--muted)" }}>
+                <div style={{ fontSize:"3rem", marginBottom:"1rem" }}>🔔</div>
+                <p style={{ fontSize:15, fontWeight:600, color:"var(--dark)" }}>You're all caught up!</p>
+                <p style={{ fontSize:13, marginTop:"0.5rem" }}>Apply to jobs — status updates will appear here.</p>
+              </div>
+            ) : (
+              <div style={{ display:"flex", flexDirection:"column", gap:"0.75rem" }}>
+                {notifs.map((n) => (
+                  <div key={n.id} style={{
+                    display:"flex", alignItems:"flex-start", gap:"0.875rem",
+                    padding:"0.875rem 1rem", borderRadius:12,
+                    background: n.bg, border:`1px solid ${n.border}`,
+                    transition:"box-shadow 0.2s",
+                  }}>
+                    {/* Icon bubble */}
+                    <div style={{
+                      width:40, height:40, borderRadius:"50%",
+                      background:"#fff", border:`1.5px solid ${n.border}`,
+                      display:"flex", alignItems:"center", justifyContent:"center",
+                      fontSize:18, flexShrink:0,
+                    }}>
+                      {n.icon}
+                    </div>
+
+                    {/* Content */}
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <p style={{ margin:0, fontSize:13.5, color:"var(--dark)", lineHeight:1.5, fontWeight:500 }}>
+                        {n.text}
+                      </p>
+                      <div style={{ display:"flex", alignItems:"center", gap:"0.5rem", marginTop:"0.35rem" }}>
+                        <span style={{
+                          fontSize:11, fontWeight:700, padding:"1px 8px",
+                          borderRadius:999, color: n.color,
+                          background:"rgba(255,255,255,0.7)",
+                          border:`1px solid ${n.border}`,
+                          textTransform:"capitalize",
+                        }}>
+                          {n.status}
+                        </span>
+                        <span style={{ fontSize:11, color:"var(--muted)" }}>{timeAgo(n.date)}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
+
+      {/* ── Settings Tab ── */}
+      {activeTab === "Settings" && (
+        <div className="dash-panel" style={{ maxWidth:520 }}>
+          <div className="panel-header"><h2>⚙ Settings</h2></div>
+          <div style={{ display:"flex", flexDirection:"column", gap:"1rem" }}>
+            <div style={{ background:"var(--cream)", borderRadius:10, padding:"1rem 1.25rem", border:"1px solid var(--border)" }}>
+              <strong style={{ display:"block", fontSize:14, color:"var(--dark)", marginBottom:"0.25rem" }}>Account</strong>
+              <p style={{ fontSize:13, color:"var(--muted)" }}>Email: {user.email}</p>
+            </div>
+            <div style={{ background:"var(--cream)", borderRadius:10, padding:"1rem 1.25rem", border:"1px solid var(--border)" }}>
+              <strong style={{ display:"block", fontSize:14, color:"var(--dark)", marginBottom:"0.5rem" }}>Danger Zone</strong>
+              <button style={{ background:"#fef2f2", border:"1px solid rgba(220,38,38,0.3)", color:"#dc2626", borderRadius:8, padding:"7px 16px", fontSize:13, fontWeight:600, cursor:"pointer" }}>
+                Delete Account
               </button>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </>
   );
 }
-
 
 // ─── Applicant Modal ──────────────────────────────────────────
 function ApplicantModal({ applicant, onClose, onStatusUpdate }) {
@@ -924,6 +1077,8 @@ export default function Dashboard() {
   const [data,    setData]    = useState(null);
   const [loading, setLoading] = useState(true);
   const [showEmployerModal, setShowEmployerModal] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("Overview");
 
   useEffect(() => {
     const stored = localStorage.getItem("user");
@@ -1000,7 +1155,21 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard">
-      <aside className="dash-sidebar">
+      {/* Mobile top bar (hamburger) */}
+      <div className="dash-mobile-topbar">
+        <button className="dash-hamburger" onClick={() => setSidebarOpen(o => !o)} aria-label="Open menu">
+          <span /><span /><span />
+        </button>
+        <span className="dash-mobile-title">Dashboard</span>
+        <Avatar initials={user.name ? user.name.slice(0, 2).toUpperCase() : "U"} size={34} />
+      </div>
+
+      {/* Overlay backdrop */}
+      {sidebarOpen && (
+        <div className="dash-sidebar-overlay" onClick={() => setSidebarOpen(false)} />
+      )}
+
+      <aside className={`dash-sidebar${sidebarOpen ? " open" : ""}`}>
         <div className="dash-user">
           <Avatar initials={user.name ? user.name.slice(0, 2).toUpperCase() : "U"} size={44} />
           <div>
@@ -1010,19 +1179,45 @@ export default function Dashboard() {
         </div>
 
         <nav className="dash-nav">
-          {[
-            { icon: "⊞", label: "Overview",      active: true  },
-            { icon: "📋", label: "Applications",  active: false },
-            { icon: "💼", label: "Jobs",          active: false },
-            { icon: "👤", label: "Profile",       active: false },
-            { icon: "🔔", label: "Notifications", active: false },
-            { icon: "⚙",  label: "Settings",      active: false },
-          ].map((item) => (
-            <button key={item.label} className={`nav-item ${item.active ? "active" : ""}`}>
-              <span className="nav-icon">{item.icon}</span>
-              {item.label}
-            </button>
-          ))}
+          {(() => {
+            const notifCount = user.role === "seeker"
+              ? (data?.applications || []).length
+              : 0;
+            return [
+              { icon: "⊞",  label: "Overview",      roles: ["seeker","employer","admin"] },
+              { icon: "📋", label: "Applications",  roles: ["seeker"] },
+              { icon: "💼", label: "Jobs",          roles: ["seeker","employer"] },
+              { icon: "📄", label: "Resume",        roles: ["seeker"] },
+              { icon: "👤", label: "Profile",       roles: ["seeker","employer","admin"] },
+              { icon: "🔔", label: "Notifications", roles: ["seeker","employer","admin"], badge: notifCount },
+              { icon: "⚙",  label: "Settings",      roles: ["seeker","employer","admin"] },
+            ]
+              .filter(item => item.roles.includes(user.role))
+              .map((item) => (
+              <button
+                key={item.label}
+                className={`nav-item ${activeTab === item.label ? "active" : ""}`}
+                onClick={() => { setActiveTab(item.label); setSidebarOpen(false); }}
+                style={{ position:"relative" }}
+              >
+                <span className="nav-icon">{item.icon}</span>
+                {item.label}
+                {item.badge > 0 && activeTab !== "Notifications" && (
+                  <span style={{
+                    position:"absolute", top:6, right:8,
+                    minWidth:18, height:18, borderRadius:999,
+                    background:"#ef4444", color:"#fff",
+                    fontSize:10, fontWeight:700,
+                    display:"flex", alignItems:"center", justifyContent:"center",
+                    padding:"0 4px",
+                  }}>
+                    {item.badge}
+                  </span>
+                )}
+              </button>
+            ));
+          })()}
+
         </nav>
 
         <button className="logout-btn" onClick={handleLogout}>
@@ -1038,7 +1233,7 @@ export default function Dashboard() {
       <main className="dash-main">
         <div className="dash-topbar">
           <div>
-            <h1>Dashboard</h1>
+            <h1>{activeTab}</h1>
             <p>Welcome back, {user.name || user.email} 👋</p>
           </div>
           {user.role === "employer" && (
@@ -1048,7 +1243,15 @@ export default function Dashboard() {
           )}
         </div>
 
-        {user.role === "seeker"   && <SeekerDashboard user={user} data={data} />}
+        {user.role === "seeker" && (
+          <SeekerDashboard
+            user={user}
+            data={data}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            navigate={navigate}
+          />
+        )}
         {user.role === "employer" && (
           <EmployerDashboard
             user={user}

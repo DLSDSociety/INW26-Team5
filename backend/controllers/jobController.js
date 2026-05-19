@@ -37,7 +37,7 @@ const getJobById = async (req, res) => {
 // @route  POST /api/jobs  [employer only]
 const createJob = async (req, res) => {
   try {
-    const { title, company, location, salary, type, description } = req.body;
+    const { title, company, location, salary, type, description, category } = req.body;
 
     if (!title || !company || !location || !type || !description) {
       return res.status(400).json({ message: 'All fields are required' });
@@ -46,6 +46,7 @@ const createJob = async (req, res) => {
     const job = await Job.create({
       title, company, location,
       salary: salary || 'Not disclosed',
+      category: category || 'Engineering',
       type, description,
       employerId: req.user.id,
     });

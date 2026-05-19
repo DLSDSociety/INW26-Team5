@@ -200,16 +200,32 @@ export default function Home() {
           <button className="view-all-btn" onClick={() => navigate("/jobs")}>See all roles →</button>
         </div>
         <div className="category-tabs">
-          {CATEGORIES.map((cat, i) => (
-            <button
-              key={cat.label}
-              className={`category-tab ${activeCategory === i ? "active" : ""}`}
-              onClick={() => { setActiveCategory(i); navigate(`/jobs?category=${cat.label}`); }}
-            >
-              <span className="cat-icon">{cat.icon}</span>
-              <span>{cat.label}</span>
-            </button>
-          ))}
+          {CATEGORIES.map((cat, i) => {
+            const CATEGORY_MAP = {
+              "AI / ML": "Engineering",
+              "Data Analytics": "Data",
+              "Backend Dev": "Engineering",
+              "Frontend Dev": "Engineering",
+              "DevOps & Cloud": "Engineering",
+              "Mobile Dev": "Engineering",
+              "Cybersecurity": "Engineering",
+              "Product": "Management"
+            };
+            return (
+              <button
+                key={cat.label}
+                className={`category-tab ${activeCategory === i ? "active" : ""}`}
+                onClick={() => {
+                  setActiveCategory(i);
+                  const mapped = CATEGORY_MAP[cat.label] || "All";
+                  navigate(`/jobs?category=${mapped}`);
+                }}
+              >
+                <span className="cat-icon">{cat.icon}</span>
+                <span>{cat.label}</span>
+              </button>
+            );
+          })}
         </div>
       </section>
 
@@ -227,7 +243,7 @@ export default function Home() {
           {FEATURED_JOBS.map((job) => {
             const typeStyle = TYPE_COLORS[job.type] || { bg: "#f1f5f9", color: "#64748b" };
             return (
-              <div key={job.id} className="job-card" onClick={() => navigate(`/jobs/${job.id}`)}>
+              <div key={job.id} className="job-card" onClick={() => navigate(`/jobs?keyword=${encodeURIComponent(job.title)}`)}>
                 <div className="job-card-top">
                   <div className="company-logo" style={{ background: job.color + "18", color: job.color, borderColor: job.color + "33" }}>
                     {job.logo}
@@ -256,7 +272,7 @@ export default function Home() {
                   <span className="job-category">{job.category}</span>
                   <div className="card-footer-right">
                     <span className="posted-time">{job.posted}</span>
-                    <button className="apply-btn" onClick={(e) => { e.stopPropagation(); navigate(`/jobs/${job.id}`); }}>
+                    <button className="apply-btn" onClick={(e) => { e.stopPropagation(); navigate(`/jobs?keyword=${encodeURIComponent(job.title)}`); }}>
                       Apply Now
                     </button>
                   </div>

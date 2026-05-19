@@ -1,13 +1,13 @@
 
+const dotenv = require('dotenv');
+dotenv.config(); // Load env vars FIRST, before any module that reads process.env
 
 const express = require('express');
 const cors = require('cors');
-const dotenv = require('dotenv');
 const path = require('path');
 const connectDB = require('./config/db');   
 const recommendRoutes = require('./routes/recommendRoutes');
 
-dotenv.config();
 connectDB();                                
 
 const app = express();

@@ -3,10 +3,20 @@ const path = require('path');
 const axios = require('axios');
 const Resume = require('../models/Resume');
 const Job = require('../models/Job');
-console.log("API KEY:", process.env.OPENROUTER_API_KEY);
 
-async function extractTextFromPDF(filePath) {
-  const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs');
+// ── Pre-load pdfjs-dist ONCE at module startup (not on each request) ──────────
+let pdfjsLib = null;
+(async () => {
+  try {
+    pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs');
+    console.log('[recommendController] pdfjs-dist loaded ✓');
+  } catch (e) {
+    console.error('[recommendController] Failed to pre-load pdfjs-dist:', e.message);
+  }
+})();
+
+async function extractTextFromPDF(filePath, maxChars = 3000) {
+  if (!pdfjsLib) throw new Error('PDF parser not ready yet.');
   const data = new Uint8Array(fs.readFileSync(filePath));
   const doc = await pdfjsLib.getDocument({ data }).promise;
   let text = '';
@@ -14,11 +24,13 @@ async function extractTextFromPDF(filePath) {
     const page = await doc.getPage(i);
     const content = await page.getTextContent();
     text += content.items.map(item => item.str).join(' ') + '\n';
+    if (text.length >= maxChars) break;
   }
-  return text.slice(0, 3000);
+  return text.slice(0, maxChars);
 }
 
 const recommendJobs = async (req, res) => {
+  const startTime = Date.now();
   try {
     // 1. Get seeker's resume
     const resume = await Resume.findOne({ userId: req.user.id });
@@ -31,10 +43,12 @@ const recommendJobs = async (req, res) => {
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({ message: 'Resume file not found on server' });
     }
-    const resumeText = await extractTextFromPDF(filePath);
+    console.log(`[recommend] Extracting PDF text...`);
+    const resumeText = await extractTextFromPDF(filePath, 2500);
+    console.log(`[recommend] PDF extracted in ${Date.now() - startTime}ms`);
 
-    // 3. Get all jobs
-    const jobs = await Job.find().lean();
+    // 3. Get jobs (limit to 10 latest active jobs to save tokens & latency)
+    const jobs = await Job.find().sort({ createdAt: -1 }).limit(10).lean();
     if (jobs.length === 0) {
       return res.status(404).json({ message: 'No jobs available to match' });
     }
@@ -47,14 +61,13 @@ const recommendJobs = async (req, res) => {
       Company: ${job.company}
       Location: ${job.location}
       Type: ${job.type}
-      Description: ${job.description}`
+      Description: ${job.description ? job.description.slice(0, 150) : ''}...`
     )).join('\n\n');
 
-    // 5. Call OpenRouter AI
-    const prompt = `
-You are an expert career counselor and job matching AI.
-
-Analyze the following resume and job listings. For each job, provide a match score (0-100) and a brief reason.
+    // 5. Build prompt
+    const prompt = `You are a job matching assistant.
+Analyze this resume against the job listings and return a match score (0-100) and 1-sentence reason for each job.
+Respond ONLY with a valid JSON array, no extra text, no markdown.
 
 RESUME:
 ${resumeText}
@@ -62,52 +75,98 @@ ${resumeText}
 JOB LISTINGS:
 ${jobList}
 
-Respond ONLY with a valid JSON array, no extra text, no markdown, no explanation. Format:
+JSON format (required):
 [
   {
-    "jobId": "<job _id>",
-    "title": "<job title>",
-    "company": "<company name>",
+    "jobId": "<jobID>",
+    "title": "<title>",
+    "company": "<company>",
     "location": "<location>",
-    "type": "<job type>",
+    "type": "<type>",
     "score": <0-100>,
-    "reason": "<2 sentence explanation of why this job matches or doesn't match>"
+    "reason": "<1-sentence explanation>"
   }
-]
+]`;
 
-Sort by score descending. Include ALL jobs.
-`;
+    // Try multiple free models sequentially to robustly bypass upstream rate limits (429s)
+    const candidateModels = [
+      'meta-llama/llama-3.2-3b-instruct:free',
+      'meta-llama/llama-3.3-70b-instruct:free',
+      'deepseek/deepseek-v4-flash:free',
+      'google/gemma-4-31b-it:free',
+      'openrouter/free'
+    ];
 
-    const response = await axios.post(
-      'https://openrouter.ai/api/v1/chat/completions',
-      {
-        model: 'openrouter/free',  
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.3,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'http://localhost:5000',
-          'X-Title': 'Job Portal AI',
-        },
+    let parsedRecommendations = null;
+    let lastError = null;
+
+    for (const model of candidateModels) {
+      try {
+        console.log(`[recommend] Attempting match call using model: ${model} at ${Date.now() - startTime}ms`);
+        const response = await axios.post(
+          'https://openrouter.ai/api/v1/chat/completions',
+          {
+            model: model,
+            messages: [{ role: 'user', content: prompt }],
+            temperature: 0.1,
+            max_tokens: 800,
+          },
+          {
+            timeout: 15000, // 15 seconds per try
+            headers: {
+              Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+              'Content-Type': 'application/json',
+              'HTTP-Referer': 'http://localhost:5000',
+              'X-Title': 'Job Portal AI',
+            },
+          }
+        );
+
+        // -- In-Loop Response Validation --
+        const choice = response?.data?.choices?.[0];
+        const content = choice?.message?.content;
+        
+        if (!content) {
+          throw new Error('Model returned an empty or null content block.');
+        }
+
+        let raw = content.trim();
+        raw = raw.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim();
+
+        const jsonStart = raw.indexOf('[');
+        const jsonEnd   = raw.lastIndexOf(']');
+        if (jsonStart === -1 || jsonEnd === -1) {
+          throw new Error('Model response did not contain a valid JSON array brackets pair.');
+        }
+        
+        raw = raw.slice(jsonStart, jsonEnd + 1);
+        parsedRecommendations = JSON.parse(raw);
+
+        console.log(`[recommend] Success with model: ${model} in ${Date.now() - startTime}ms`);
+        break; // break loop on success
+      } catch (err) {
+        console.warn(`[recommend] Model ${model} failed validation: ${err.message}. Trying next candidate...`);
+        lastError = err;
       }
-    );
-    // 6. Parse AI response
-    let raw = response.data.choices[0].message.content;
-    raw = raw.replace(/```json|```/g, '').trim();
-    const recommendations = JSON.parse(raw);
+    }
 
-    res.json({ count: recommendations.length, recommendations });
+    if (!parsedRecommendations) {
+      throw lastError || new Error('All candidate AI matching models failed.');
+    }
+
+    // Sort descending by match score
+    parsedRecommendations.sort((a, b) => b.score - a.score);
+
+    console.log(`[recommend] Done in ${Date.now() - startTime}ms total`);
+    res.json({ count: parsedRecommendations.length, recommendations: parsedRecommendations });
 
   } catch (error) {
-    console.error('Recommendation error:', error.message);
-    if (error.response) {
-      console.error('OpenRouter status:', error.response.status);
-      console.error('OpenRouter body:', JSON.stringify(error.response.data));
-    }
-    res.status(500).json({ message: 'Server error', error: error.message });
+    const elapsed = Date.now() - startTime;
+    console.error(`[recommend] Final matching failure after ${elapsed}ms:`, error.message);
+    res.status(500).json({ 
+      message: 'AI matching service is temporarily busy. Please retry shortly.',
+      error: error.message 
+    });
   }
 };
 

@@ -294,16 +294,16 @@
 .view-all-btn:hover { opacity: 0.75; }
 
 .category-tabs {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 12px;
 }
 .category-tab {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  padding: 16px 20px;
+  padding: 16px 12px;
   background: var(--white);
   border: 1.5px solid var(--border);
   border-radius: 12px;
@@ -313,7 +313,6 @@
   cursor: pointer;
   transition: all 0.2s;
   font-family: 'DM Sans', sans-serif;
-  min-width: 90px;
 }
 .category-tab:hover, .category-tab.active {
   border-color: var(--orange);
@@ -331,7 +330,7 @@
 }
 .jobs-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 16px;
 }
 .job-card {
@@ -679,4 +678,6 @@
   .why-section { padding: 40px 20px; }
   .cta-section { padding: 48px 20px; }
   .announcement-bar { font-size: 12px; gap: 10px; flex-wrap: wrap; justify-content: center; text-align: center; }
+  .section-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .view-all-btn { font-size: 13px; align-self: flex-start; }
 }
