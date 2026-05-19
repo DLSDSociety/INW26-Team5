@@ -927,14 +927,14 @@ function EmployerDashboard({ user, data, externalShowModal, onModalClose }) {
 }
 
 // ─── Admin Dashboard ──────────────────────────────────────────
-function AdminDashboard({ user, data, onRefresh }) {
+function AdminDashboard({ user, data, activeTab, onRefresh }) {
   const stats        = data?.stats        || {};
   const users        = data?.users        || [];
   const jobs         = data?.jobs         || [];
   const applications = data?.applications || [];
 
   async function handleDeleteUser(userId) {
-    if (!window.confirm("Are you sure you want to delete this user?")) return;
+    if (!window.confirm("Are you sure you want to delete this user? This action cannot be undone.")) return;
     try {
       const res = await fetch(`${API}/admin/users/${userId}`, { method: "DELETE", headers: authHeaders() });
       if (res.ok) onRefresh();
@@ -949,7 +949,7 @@ function AdminDashboard({ user, data, onRefresh }) {
     } catch (err) { console.error("Failed to delete job:", err); }
   }
 
-  return (
+  if (activeTab === "Overview") return (
     <>
       <div className="stats-row">
         {[
@@ -967,20 +967,29 @@ function AdminDashboard({ user, data, onRefresh }) {
           </div>
         ))}
       </div>
+      <div className="dash-panel wide" style={{ marginTop: "2rem" }}>
+        <div className="panel-header">
+          <h2>Admin Controls</h2>
+        </div>
+        <p style={{ color: "var(--muted)" }}>Welcome to the master admin panel. Use the sidebar to navigate to specific resources to moderate the platform.</p>
+      </div>
+    </>
+  );
 
-      <div className="dash-grid">
-        {/* Users table */}
-        <div className="dash-panel wide">
-          <div className="panel-header">
-            <h2>All Users</h2>
-            <span className="flag-count">{users.length}</span>
-          </div>
-          {users.length === 0 ? (
-            <p style={{ color: "var(--muted)", padding: "1rem 0" }}>No users yet.</p>
-          ) : (
+  if (activeTab === "Users") return (
+    <div className="dash-grid">
+      <div className="dash-panel wide">
+        <div className="panel-header">
+          <h2>Platform Users</h2>
+          <span className="flag-count">{users.length}</span>
+        </div>
+        {users.length === 0 ? (
+          <p style={{ color: "var(--muted)", padding: "1rem 0" }}>No users found.</p>
+        ) : (
+          <div className="table-responsive">
             <table className="dash-table">
               <thead>
-                <tr><th>User</th><th>Email</th><th>Role</th><th></th></tr>
+                <tr><th>User</th><th>Email</th><th>Role</th><th>Actions</th></tr>
               </thead>
               <tbody>
                 {users.map((u) => (
@@ -994,48 +1003,75 @@ function AdminDashboard({ user, data, onRefresh }) {
                     <td className="td-muted">{u.email}</td>
                     <td><StatusBadge status={u.role} /></td>
                     <td>
+                      {u.role !== "admin" && (
+                        <div className="td-actions">
+                          <button
+                            className="icon-btn danger" title="Delete User (Spam Control)"
+                            onClick={() => handleDeleteUser(u._id)}
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  if (activeTab === "Jobs") return (
+    <div className="dash-grid">
+      <div className="dash-panel wide">
+        <div className="panel-header">
+          <h2>All Jobs</h2>
+          <span className="flag-count">{jobs.length}</span>
+        </div>
+        {jobs.length === 0 ? (
+          <p style={{ color: "var(--muted)", padding: "1rem 0" }}>No jobs yet.</p>
+        ) : (
+          <div className="table-responsive">
+            <table className="dash-table">
+              <thead>
+                <tr><th>Job Title</th><th>Company</th><th>Location</th><th>Actions</th></tr>
+              </thead>
+              <tbody>
+                {jobs.map((j) => (
+                  <tr key={j._id}>
+                    <td><strong>{j.title}</strong></td>
+                    <td className="td-muted">{j.company}</td>
+                    <td className="td-muted">{j.location}</td>
+                    <td>
                       <div className="td-actions">
                         <button
-                          className="icon-btn danger" title="Delete user"
-                          onClick={() => handleDeleteUser(u._id)}
-                        >⊘</button>
+                          className="icon-btn danger" title="Delete job"
+                          onClick={() => handleDeleteJob(j._id)}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                          </svg>
+                        </button>
                       </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          )}
-        </div>
-
-        {/* Jobs table */}
-        <div className="dash-panel">
-          <div className="panel-header">
-            <h2>All Jobs</h2>
-            <span className="flag-count">{jobs.length}</span>
           </div>
-          {jobs.length === 0 ? (
-            <p style={{ color: "var(--muted)", padding: "1rem 0" }}>No jobs yet.</p>
-          ) : (
-            jobs.map((job) => (
-              <div key={job._id} className="flagged-row">
-                <div className="flagged-info">
-                  <strong>{job.title}</strong>
-                  <span>{job.company} · {job.location}</span>
-                </div>
-                <StatusBadge status={job.type} />
-                <button
-                  className="icon-btn danger" title="Delete job"
-                  onClick={() => handleDeleteJob(job._id)}
-                >✕</button>
-              </div>
-            ))
-          )}
-        </div>
+        )}
       </div>
+    </div>
+  );
 
-      {/* Applications table */}
-      <div className="dash-panel" style={{ marginTop: "1.5rem" }}>
+  if (activeTab === "Applications") return (
+    <div className="dash-grid">
+      <div className="dash-panel wide">
         <div className="panel-header">
           <h2>All Applications</h2>
           <span className="flag-count">{applications.length}</span>
@@ -1043,30 +1079,38 @@ function AdminDashboard({ user, data, onRefresh }) {
         {applications.length === 0 ? (
           <p style={{ color: "var(--muted)", padding: "1rem 0" }}>No applications yet.</p>
         ) : (
-          <table className="dash-table">
-            <thead>
-              <tr><th>Applicant</th><th>Email</th><th>Job</th><th>Applied On</th><th>Status</th></tr>
-            </thead>
-            <tbody>
-              {applications.map((app) => (
-                <tr key={app._id}>
-                  <td>
-                    <div className="td-user">
-                      <Avatar initials={app.seekerName?.slice(0, 2).toUpperCase() || "U"} size={30} />
-                      {app.seekerName}
-                    </div>
-                  </td>
-                  <td className="td-muted">{app.seekerEmail}</td>
-                  <td className="td-muted">{app.jobTitle || app.jobId}</td>
-                  <td className="td-muted">{new Date(app.appliedAt).toLocaleDateString()}</td>
-                  <td><StatusBadge status={app.status} /></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="table-responsive">
+            <table className="dash-table">
+              <thead>
+                <tr><th>Seeker Name</th><th>Contact</th><th>Status</th><th>Applied Date</th></tr>
+              </thead>
+              <tbody>
+                {applications.map((a) => (
+                  <tr key={a._id}>
+                    <td>
+                      <div className="td-user">
+                        <Avatar initials={a.seekerName?.slice(0, 2).toUpperCase() || "S"} size={30} />
+                        {a.seekerName}
+                      </div>
+                    </td>
+                    <td className="td-muted">{a.seekerEmail}</td>
+                    <td><StatusBadge status={a.status} /></td>
+                    <td className="td-muted">{new Date(a.appliedAt).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
-    </>
+    </div>
+  );
+
+  return (
+    <div className="dash-panel placeholder">
+      <h3>{activeTab} Settings</h3>
+      <p style={{ color: "var(--muted)", marginTop: "1rem" }}>This admin feature is coming soon.</p>
+    </div>
   );
 }
 
@@ -1185,8 +1229,9 @@ export default function Dashboard() {
               : 0;
             return [
               { icon: "⊞",  label: "Overview",      roles: ["seeker","employer","admin"] },
-              { icon: "📋", label: "Applications",  roles: ["seeker"] },
-              { icon: "💼", label: "Jobs",          roles: ["seeker","employer"] },
+              { icon: "👥", label: "Users",         roles: ["admin"] },
+              { icon: "📋", label: "Applications",  roles: ["seeker","admin"] },
+              { icon: "💼", label: "Jobs",          roles: ["seeker","employer","admin"] },
               { icon: "📄", label: "Resume",        roles: ["seeker"] },
               { icon: "👤", label: "Profile",       roles: ["seeker","employer","admin"] },
               { icon: "🔔", label: "Notifications", roles: ["seeker","employer","admin"], badge: notifCount },
@@ -1263,6 +1308,7 @@ export default function Dashboard() {
         {user.role === "admin" && (
           <AdminDashboard
             user={user} data={data}
+            activeTab={activeTab}
             onRefresh={() => fetchDashboardData("admin")}
           />
         )}
