@@ -1,15 +1,15 @@
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap');
 
 :root {
-  --orange: #FF6B35;
-  --orange-light: #FF8C5A;
-  --orange-pale: #FFF3EE;
-  --cream: #FFFAF7;
-  --dark: #1A0F0A;
-  --text: #2D1F1A;
-  --muted: #8B7355;
-  --border: #EDE0D4;
-  --white: #FFFFFF;
+  --orange: #f97316;
+  --orange-light: #fb923c;
+  --orange-pale: #fff7ed;
+  --cream: #f8fafc;
+  --dark: #0f172a;
+  --text: #334155;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --white: #ffffff;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -18,7 +18,7 @@
 .auth-page {
   display: flex;
   min-height: 100vh;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
 /* ══════════════════════════
@@ -55,8 +55,7 @@
 .auth-brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-family: 'Sora', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-size: 19px;
   font-weight: 800;
   color: #fff;
@@ -83,7 +82,7 @@
   z-index: 1;
 }
 .auth-left-content h2 {
-  font-family: 'Sora', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-size: 30px;
   font-weight: 800;
   color: #fff;
@@ -104,7 +103,7 @@
   gap: 3px;
 }
 .auth-stat strong {
-  font-family: 'Sora', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-size: 22px;
   font-weight: 800;
   color: var(--orange);
@@ -146,7 +145,7 @@
   display: flex; align-items: center; justify-content: center;
   font-size: 11px; font-weight: 700;
   color: var(--orange);
-  font-family: 'Sora', sans-serif;
+  font-family: 'Outfit', sans-serif;
 }
 .auth-testimonial-author strong {
   display: block; font-size: 13px;
@@ -219,12 +218,12 @@
   position: relative;
 }
 .auth-card-header h1 {
-  font-family: 'Sora', sans-serif;
-  font-size: 26px;
-  font-weight: 800;
+  font-family: 'Outfit', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
   color: var(--dark);
-  margin-bottom: 6px;
-  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
 }
 .auth-card-header p {
   font-size: 14px;
@@ -281,7 +280,20 @@
   background: none; border: none; outline: none;
   color: var(--text);
   font-size: 14px;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
+}
+.input-wrapper input:-webkit-autofill,
+.input-wrapper input:-webkit-autofill:hover, 
+.input-wrapper input:-webkit-autofill:focus, 
+.input-wrapper input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 100px var(--white) inset !important;
+  -webkit-text-fill-color: var(--text) !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+.input-wrapper input:autofill {
+  box-shadow: 0 0 0 100px var(--white) inset !important;
+  text-fill-color: var(--text) !important;
+  transition: background-color 5000s ease-in-out 0s;
 }
 .input-wrapper input::placeholder { color: #C4AFA6; }
 .toggle-password {
@@ -313,8 +325,8 @@
   border: none;
   border-radius: 10px;
   font-size: 15px;
-  font-weight: 700;
-  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
   cursor: pointer;
   margin-top: 4px;
   transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
@@ -360,8 +372,8 @@
   border-radius: 10px;
   padding: 11px;
   color: var(--text);
-  font-size: 13px; font-weight: 500;
-  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 500;
+  font-family: 'Inter', sans-serif;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -394,7 +406,7 @@
   display: flex; align-items: center; justify-content: center;
   font-size: 12px; font-weight: 700;
   color: var(--muted);
-  font-family: 'Sora', sans-serif;
+  font-family: 'Outfit', sans-serif;
   transition: all 0.3s;
 }
 .step-dot.active {
@@ -425,7 +437,7 @@
   text-align: left;
   transition: all 0.2s;
   width: 100%;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 .role-card:hover {
   border-color: var(--orange);
@@ -471,11 +483,12 @@
 .back-btn {
   position: absolute; top: 2px; left: 0;
   background: var(--orange-pale);
-  border: 1.5px solid rgba(255,107,53,0.25);
+  border: 1.5px solid rgba(249, 115, 22, 0.25);
   border-radius: 8px;
   width: 32px; height: 32px;
   display: flex; align-items: center; justify-content: center;
   color: var(--orange); cursor: pointer;
+  padding: 0;
   transition: all 0.2s;
 }
 .back-btn:hover { background: var(--orange); color: #fff; }

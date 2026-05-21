@@ -80,7 +80,7 @@ export default function Jobs() {
       if (!res.ok) {
         setApplyMsg({ text: data.message || "Failed to apply.", type: "error" });
       } else {
-        setApplyMsg({ text: "Applied successfully! 🎉", type: "success" });
+        setApplyMsg({ text: "Applied successfully!", type: "success" });
       }
     } catch {
       setApplyMsg({ text: "Could not connect to server.", type: "error" });
@@ -126,7 +126,9 @@ export default function Jobs() {
 
   if (error) return (
     <div className="jobs-state-screen">
-      <span style={{ fontSize: 40 }}>😕</span>
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5" style={{ marginBottom: 12 }}>
+        <circle cx="12" cy="12" r="10"/><path d="M8 15s1.5-2 4-2 4 2 4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>
+      </svg>
       <p style={{ color: "#EF4444" }}>{error}</p>
       <button className="orange-pill-btn" onClick={fetchJobs}>Retry</button>
     </div>
@@ -145,7 +147,10 @@ export default function Jobs() {
       {/* Top Search Bar */}
       <div className="jobs-search-bar">
         <button className="mobile-filter-btn" onClick={() => setSidebarOpen(!sidebarOpen)}>
-          ⚙ Filters {hasFilters && <span className="filter-dot" />}
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: 6, verticalAlign: 'middle' }}>
+            <line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/>
+          </svg>
+          Filters {hasFilters && <span className="filter-dot" />}
         </button>
         <div className="jobs-search-field">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF6B35" strokeWidth="2">
@@ -157,7 +162,10 @@ export default function Jobs() {
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
           />
-          {keyword && <button className="clear-input" onClick={() => setKeyword("")}>✕</button>}
+          {keyword && <button className="clear-input" onClick={() => setKeyword("")}
+            aria-label="Clear search">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>}
         </div>
         <div className="search-bar-divider" />
         <div className="jobs-search-field loc">
@@ -231,7 +239,9 @@ export default function Jobs() {
 
           {filtered.length === 0 ? (
             <div className="no-results">
-              <span style={{ fontSize: 52 }}>🔍</span>
+              <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5" style={{ marginBottom: 12 }}>
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+              </svg>
               <p>No jobs match your search.</p>
               <button className="orange-pill-btn" onClick={clearFilters}>Clear filters</button>
             </div>
@@ -288,7 +298,15 @@ export default function Jobs() {
                         onClick={(e) => toggleSave(e, job._id)}   // ← _id
                         title={isSaved ? "Unsave" : "Save job"}
                       >
-                        {isSaved ? "★" : "☆"}
+                        {isSaved ? (
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                          </svg>
+                        ) : (
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                          </svg>
+                        )}
                       </button>
                       <button
                         className="apply-now-btn"

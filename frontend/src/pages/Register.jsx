@@ -5,7 +5,6 @@ import "./Auth.css";
 const ROLES = [
   {
     id: "seeker",
-    emoji: "🔍",
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
@@ -16,7 +15,6 @@ const ROLES = [
   },
   {
     id: "employer",
-    emoji: "🏢",
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <rect x="2" y="7" width="20" height="14" rx="2"/>
@@ -28,6 +26,7 @@ const ROLES = [
     desc: "I'm hiring talent",
   },
 ];
+
 
 export default function Register() {
   const navigate = useNavigate();
@@ -241,7 +240,7 @@ export default function Register() {
                       <div className="strength-bars">
                         {[1,2,3,4,5].map((i) => (
                           <div key={i} className="strength-bar"
-                            style={{ background: i <= strength ? strengthColor : "#EDE0D4" }} />
+                            style={{ background: i <= strength ? strengthColor : "var(--border)" }} />
                         ))}
                       </div>
                       <span style={{ color: strengthColor, fontSize: 11, fontWeight: 600 }}>{strengthLabel}</span>

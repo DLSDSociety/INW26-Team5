@@ -1,5 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  FiFileText, FiFolder, FiUpload, FiTrash2, FiRefreshCw,
+  FiTarget, FiClock, FiSearch, FiBriefcase, FiBell,
+  FiUser, FiSettings, FiGrid, FiUsers, FiList,
+  FiBarChart2, FiCheckCircle, FiAlertTriangle, FiInfo,
+  FiCalendar, FiEye
+} from "react-icons/fi";
 import "./Dashboard.css";
 
 // ─── API config ───────────────────────────────────────────────
@@ -110,7 +117,7 @@ function ResumeUpload() {
           marginBottom: "1rem",
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <span style={{ fontSize: "1.5rem" }}>📄</span>
+            <FiFileText size={22} style={{ color: "#3b82f6", flexShrink: 0 }} />
             <div>
               <strong style={{ fontSize: "14px", display: "block" }}>{resume.originalName}</strong>
               <span style={{ fontSize: "12px", color: "var(--muted)" }}>
@@ -118,7 +125,9 @@ function ResumeUpload() {
               </span>
             </div>
           </div>
-          <button className="icon-btn danger" title="Delete resume" onClick={handleDelete}>✕</button>
+          <button className="icon-btn danger" title="Delete resume" onClick={handleDelete}>
+            <FiTrash2 size={14} />
+          </button>
         </div>
       ) : (
         <div
@@ -134,7 +143,7 @@ function ResumeUpload() {
             transition: "all 0.2s", cursor: "pointer",
           }}
         >
-          <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>📂</div>
+          <div style={{ marginBottom: "0.75rem" }}><FiFolder size={32} style={{ color: "var(--muted)" }} /></div>
           <p style={{ fontSize: "14px", marginBottom: "0.25rem" }}>
             {uploading ? "Uploading..." : "Drag & drop your resume here"}
           </p>
@@ -153,7 +162,11 @@ function ResumeUpload() {
         onClick={() => document.getElementById('resume-input').click()}
         style={{ width: "100%" }}
       >
-        {uploading ? "Uploading..." : resume ? "🔄 Replace Resume" : "📤 Upload Resume"}
+        {uploading ? "Uploading..." : resume ? (
+          <><FiRefreshCw size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} /> Replace Resume</>
+        ) : (
+          <><FiUpload size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} /> Upload Resume</>
+        )}
       </button>
 
       {message && (
@@ -253,20 +266,22 @@ function SeekerDashboard({ user, data, activeTab, onTabChange, navigate }) {
           {/* AI Recommendations */}
           <div className="dash-panel" style={{ marginBottom: "1.5rem" }}>
             <div className="panel-header" style={{ marginBottom: "1rem" }}>
-              <h2>🎯 AI Job Recommendations</h2>
+              <h2><FiTarget size={16} style={{ marginRight: 8, verticalAlign: 'middle' }} /> AI Job Recommendations</h2>
               <button className="panel-btn" onClick={fetchRecommendations} disabled={recLoading} style={{ minWidth: "140px" }}>
-                {recLoading ? "Analyzing..." : recFetched ? "🔄 Refresh" : "Match My Resume"}
+                {recLoading ? "Analyzing..." : recFetched ? (
+                  <><FiRefreshCw size={13} style={{ marginRight: 5, verticalAlign: 'middle' }} /> Refresh</>
+                ) : "Match My Resume"}
               </button>
             </div>
             {!recFetched && !recLoading && (
               <div style={{ textAlign:"center", padding:"2rem", background:"var(--cream)", borderRadius:"12px", border:"2px dashed var(--border)" }}>
-                <div style={{ fontSize:"2.5rem", marginBottom:"0.75rem" }}>🎯</div>
+                <div style={{ marginBottom: "0.75rem" }}><FiTarget size={40} style={{ color: "var(--muted)" }} /></div>
                 <p style={{ fontWeight:600, marginBottom:"0.25rem", color:"var(--dark)" }}>Find your perfect job match</p>
                 <p style={{ fontSize:"13px", color:"var(--muted)", marginBottom:"1rem" }}>Upload your resume and click "Match My Resume" to get AI-powered recommendations</p>
                 <button className="panel-btn" onClick={fetchRecommendations}>Match My Resume</button>
               </div>
             )}
-            {recLoading && <div style={{ textAlign:"center", padding:"2rem" }}><div style={{ fontSize:"2rem" }}>⏳</div><p style={{ color:"var(--muted)", fontSize:"14px", marginTop:"0.5rem" }}>AI is analyzing your resume...</p></div>}
+            {recLoading && <div style={{ textAlign:"center", padding:"2rem" }}><FiClock size={32} style={{ color: "var(--muted)" }} /><p style={{ color:"var(--muted)", fontSize:"14px", marginTop:"0.5rem" }}>AI is analyzing your resume...</p></div>}
             {recError && <div style={{ padding:"1rem", borderRadius:"10px", background:"rgba(239,68,68,0.08)", color:"#ef4444", fontSize:"14px", textAlign:"center" }}>{recError}</div>}
             {recFetched && !recLoading && recommendations.length > 0 && (
               <div style={{ display:"flex", flexDirection:"column", gap:"0.75rem" }}>
@@ -316,9 +331,15 @@ function SeekerDashboard({ user, data, activeTab, onTabChange, navigate }) {
               <div className="dash-panel">
                 <div className="panel-header"><h2>Quick Actions</h2></div>
                 <div style={{ display:"flex", flexDirection:"column", gap:"0.5rem" }}>
-                  <button className="panel-btn" onClick={() => navigate("/jobs")}>🔍 Browse Jobs</button>
-                  <button className="panel-btn" onClick={() => onTabChange("Resume")} style={{ background:"linear-gradient(135deg,#7c3aed,#5b21b6)" }}>📄 My Resume</button>
-                  <button className="panel-btn" onClick={fetchRecommendations} disabled={recLoading} style={{ background:"#0ea5e9" }}>🎯 AI Match</button>
+                  <button className="panel-btn" onClick={() => navigate("/jobs")}>
+                    <FiSearch size={13} style={{ marginRight: 5, verticalAlign: 'middle' }} /> Browse Jobs
+                  </button>
+                  <button className="panel-btn" onClick={() => onTabChange("Resume")} style={{ background:"linear-gradient(135deg,#7c3aed,#5b21b6)" }}>
+                    <FiFileText size={13} style={{ marginRight: 5, verticalAlign: 'middle' }} /> My Resume
+                  </button>
+                  <button className="panel-btn" onClick={fetchRecommendations} disabled={recLoading} style={{ background:"#0ea5e9" }}>
+                    <FiTarget size={13} style={{ marginRight: 5, verticalAlign: 'middle' }} /> AI Match
+                  </button>
                 </div>
               </div>
             </div>
@@ -355,7 +376,7 @@ function SeekerDashboard({ user, data, activeTab, onTabChange, navigate }) {
       {/* ── Jobs Tab ── */}
       {activeTab === "Jobs" && (
         <div className="dash-panel" style={{ textAlign:"center", padding:"3rem 2rem" }}>
-          <div style={{ fontSize:"3rem", marginBottom:"1rem" }}>💼</div>
+          <div style={{ marginBottom: "1rem" }}><FiBriefcase size={40} style={{ color: "var(--muted)" }} /></div>
           <h2 style={{ marginBottom:"0.5rem", color:"var(--dark)" }}>Find Your Next Job</h2>
           <p style={{ color:"var(--muted)", marginBottom:"1.5rem", fontSize:"14px" }}>Browse thousands of curated tech jobs across India</p>
           <button className="panel-btn" onClick={() => navigate("/jobs")} style={{ fontSize:"14px", padding:"10px 28px" }}>Browse All Jobs →</button>
@@ -366,11 +387,15 @@ function SeekerDashboard({ user, data, activeTab, onTabChange, navigate }) {
       {activeTab === "Resume" && (
         <div className="dash-col">
           <div className="dash-panel">
-            <div className="panel-header"><h2>📄 My Resume</h2></div>
+            <div className="panel-header"><h2><FiFileText size={15} style={{ marginRight: 7, verticalAlign: 'middle' }} /> My Resume</h2></div>
             <ResumeUpload />
             <button className="panel-btn" onClick={fetchAnalysis} disabled={analysisLoading}
               style={{ width:"100%", marginTop:"0.75rem", background:"linear-gradient(135deg,#7c3aed,#5b21b6)", color:"#fff", border:"none" }}>
-              {analysisLoading ? "🔍 Analyzing..." : "📊 Analyze Resume with AI"}
+              {analysisLoading ? (
+                <><FiSearch size={13} style={{ marginRight: 5, verticalAlign: 'middle' }} /> Analyzing...</>
+              ) : (
+                <><FiBarChart2 size={13} style={{ marginRight: 5, verticalAlign: 'middle' }} /> Analyze Resume with AI</>
+              )}
             </button>
             {analysisError && <p style={{ color:"#ef4444", fontSize:"13px", textAlign:"center", marginTop:"0.5rem" }}>{analysisError}</p>}
           </div>
@@ -378,7 +403,7 @@ function SeekerDashboard({ user, data, activeTab, onTabChange, navigate }) {
           {analysis && (
             <div className="dash-panel" style={{ border:"1.5px solid rgba(124,58,237,0.3)", background:"rgba(124,58,237,0.04)" }}>
               <div className="panel-header" style={{ marginBottom:"1rem" }}>
-                <h2 style={{ color:"#7c3aed" }}>📊 Resume Analysis</h2>
+                <h2 style={{ color:"#7c3aed" }}><FiBarChart2 size={15} style={{ marginRight: 7, verticalAlign: 'middle' }} /> Resume Analysis</h2>
               </div>
               <div style={{ display:"flex", alignItems:"center", gap:"1rem", marginBottom:"1rem", flexWrap:"wrap" }}>
                 <div style={{ width:72, height:72, borderRadius:"50%", border:`4px solid ${analysis.score>=75?"#22c55e":analysis.score>=50?"#f59e0b":"#ef4444"}`, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", background:"#fff", flexShrink:0 }}>
@@ -388,16 +413,16 @@ function SeekerDashboard({ user, data, activeTab, onTabChange, navigate }) {
                 <div><div style={{ fontSize:18, fontWeight:700, color:"#0f172a" }}>Grade: {analysis.grade}</div><p style={{ margin:0, fontSize:13, color:"#475569", lineHeight:1.5 }}>{analysis.summary}</p></div>
               </div>
               <div style={{ marginBottom:"0.75rem" }}>
-                <p style={{ fontWeight:600, color:"#16a34a", fontSize:13, marginBottom:"0.4rem" }}>✅ Strengths</p>
+                <p style={{ fontWeight:600, color:"#16a34a", fontSize:13, marginBottom:"0.4rem" }}><FiCheckCircle size={13} style={{ marginRight: 5, verticalAlign: 'middle' }} /> Strengths</p>
                 {analysis.strengths?.map((s,i) => <div key={i} style={{ display:"flex", gap:"0.4rem", marginBottom:"0.25rem" }}><span style={{ color:"#22c55e" }}>•</span><span style={{ fontSize:13, color:"#334155" }}>{s}</span></div>)}
               </div>
               <div style={{ marginBottom:"0.75rem" }}>
-                <p style={{ fontWeight:600, color:"#dc2626", fontSize:13, marginBottom:"0.4rem" }}>⚠️ Areas to Improve</p>
+                <p style={{ fontWeight:600, color:"#dc2626", fontSize:13, marginBottom:"0.4rem" }}><FiAlertTriangle size={13} style={{ marginRight: 5, verticalAlign: 'middle' }} /> Areas to Improve</p>
                 {analysis.weaknesses?.map((w,i) => <div key={i} style={{ display:"flex", gap:"0.4rem", marginBottom:"0.25rem" }}><span style={{ color:"#ef4444" }}>•</span><span style={{ fontSize:13, color:"#334155" }}>{w}</span></div>)}
               </div>
               {analysis.ats_tips?.length > 0 && (
                 <div style={{ background:"rgba(59,130,246,0.07)", borderRadius:8, padding:"0.75rem", border:"1px solid rgba(59,130,246,0.15)" }}>
-                  <p style={{ fontWeight:600, color:"#2563eb", fontSize:13, marginBottom:"0.4rem" }}>💡 ATS Tips</p>
+                  <p style={{ fontWeight:600, color:"#2563eb", fontSize:13, marginBottom:"0.4rem" }}><FiInfo size={13} style={{ marginRight: 5, verticalAlign: 'middle' }} /> ATS Tips</p>
                   {analysis.ats_tips.map((t,i) => <div key={i} style={{ display:"flex", gap:"0.4rem", marginBottom:"0.25rem" }}><span style={{ color:"#3b82f6" }}>→</span><span style={{ fontSize:13, color:"#334155" }}>{t}</span></div>)}
                 </div>
               )}
@@ -409,7 +434,7 @@ function SeekerDashboard({ user, data, activeTab, onTabChange, navigate }) {
       {/* ── Profile Tab ── */}
       {activeTab === "Profile" && (
         <div className="dash-panel" style={{ maxWidth:520 }}>
-          <div className="panel-header"><h2>👤 My Profile</h2></div>
+          <div className="panel-header"><h2><FiUser size={15} style={{ marginRight: 7, verticalAlign: 'middle' }} /> My Profile</h2></div>
           <div style={{ display:"flex", flexDirection:"column", gap:"1rem" }}>
             <div style={{ display:"flex", alignItems:"center", gap:"1rem" }}>
               <Avatar initials={user.name?.slice(0,2).toUpperCase() || "U"} size={56} />
@@ -438,12 +463,12 @@ function SeekerDashboard({ user, data, activeTab, onTabChange, navigate }) {
           const date = new Date(app.updatedAt || app.appliedAt);
 
           const statusMap = {
-            accepted:    { icon: "🎉", color: "#16a34a", bg: "rgba(34,197,94,0.08)",  border: "rgba(34,197,94,0.2)",  text: `Congratulations! Your application for ${title}${company ? ` at ${company}` : ""} has been accepted.` },
-            rejected:    { icon: "❌", color: "#dc2626", bg: "rgba(220,38,38,0.07)",  border: "rgba(220,38,38,0.2)",  text: `Your application for ${title}${company ? ` at ${company}` : ""} was not selected this time.` },
-            shortlisted: { icon: "⭐", color: "#d97706", bg: "rgba(245,158,11,0.08)", border: "rgba(245,158,11,0.2)", text: `You've been shortlisted for ${title}${company ? ` at ${company}` : ""}!` },
-            reviewed:    { icon: "👁",  color: "#3b82f6", bg: "rgba(59,130,246,0.07)", border: "rgba(59,130,246,0.2)", text: `Your application for ${title} has been reviewed.` },
-            Interview:   { icon: "📅", color: "#7c3aed", bg: "rgba(124,58,237,0.08)", border: "rgba(124,58,237,0.2)", text: `You've been invited to interview for ${title}${company ? ` at ${company}` : ""}!` },
-            pending:     { icon: "📨", color: "#64748b", bg: "rgba(100,116,139,0.06)", border: "rgba(100,116,139,0.2)", text: `Application submitted for ${title}${company ? ` at ${company}` : ""}.` },
+            accepted:    { icon: <FiCheckCircle size={18} color="#16a34a" />, color: "#16a34a", bg: "rgba(34,197,94,0.08)",  border: "rgba(34,197,94,0.2)",  text: `Congratulations! Your application for ${title}${company ? ` at ${company}` : ""} has been accepted.` },
+            rejected:    { icon: <FiTrash2 size={18} color="#dc2626" />,       color: "#dc2626", bg: "rgba(220,38,38,0.07)",  border: "rgba(220,38,38,0.2)",  text: `Your application for ${title}${company ? ` at ${company}` : ""} was not selected this time.` },
+            shortlisted: { icon: <FiTarget size={18} color="#d97706" />,        color: "#d97706", bg: "rgba(245,158,11,0.08)", border: "rgba(245,158,11,0.2)", text: `You've been shortlisted for ${title}${company ? ` at ${company}` : ""}!` },
+            reviewed:    { icon: <FiEye size={18} color="#3b82f6" />,           color: "#3b82f6", bg: "rgba(59,130,246,0.07)", border: "rgba(59,130,246,0.2)", text: `Your application for ${title} has been reviewed.` },
+            Interview:   { icon: <FiCalendar size={18} color="#7c3aed" />,      color: "#7c3aed", bg: "rgba(124,58,237,0.08)", border: "rgba(124,58,237,0.2)", text: `You've been invited to interview for ${title}${company ? ` at ${company}` : ""}!` },
+            pending:     { icon: <FiList size={18} color="#64748b" />,          color: "#64748b", bg: "rgba(100,116,139,0.06)", border: "rgba(100,116,139,0.2)", text: `Application submitted for ${title}${company ? ` at ${company}` : ""}.` },
           };
 
           const cfg = statusMap[app.status] || statusMap["pending"];
@@ -464,7 +489,7 @@ function SeekerDashboard({ user, data, activeTab, onTabChange, navigate }) {
         return (
           <div className="dash-panel">
             <div className="panel-header">
-              <h2>🔔 Notifications</h2>
+              <h2><FiBell size={15} style={{ marginRight: 7, verticalAlign: 'middle' }} /> Notifications</h2>
               {notifs.length > 0 && (
                 <span style={{ fontSize:12, fontWeight:600, padding:"2px 10px", borderRadius:999, background:"rgba(255,107,53,0.12)", color:"var(--orange)" }}>
                   {notifs.length} update{notifs.length !== 1 ? "s" : ""}
@@ -474,7 +499,7 @@ function SeekerDashboard({ user, data, activeTab, onTabChange, navigate }) {
 
             {notifs.length === 0 ? (
               <div style={{ textAlign:"center", padding:"3rem 1rem", color:"var(--muted)" }}>
-                <div style={{ fontSize:"3rem", marginBottom:"1rem" }}>🔔</div>
+                <div style={{ marginBottom: "1rem" }}><FiBell size={40} style={{ color: "var(--muted)" }} /></div>
                 <p style={{ fontSize:15, fontWeight:600, color:"var(--dark)" }}>You're all caught up!</p>
                 <p style={{ fontSize:13, marginTop:"0.5rem" }}>Apply to jobs — status updates will appear here.</p>
               </div>
@@ -527,7 +552,7 @@ function SeekerDashboard({ user, data, activeTab, onTabChange, navigate }) {
       {/* ── Settings Tab ── */}
       {activeTab === "Settings" && (
         <div className="dash-panel" style={{ maxWidth:520 }}>
-          <div className="panel-header"><h2>⚙ Settings</h2></div>
+          <div className="panel-header"><h2><FiSettings size={15} style={{ marginRight: 7, verticalAlign: 'middle' }} /> Settings</h2></div>
           <div style={{ display:"flex", flexDirection:"column", gap:"1rem" }}>
             <div style={{ background:"var(--cream)", borderRadius:10, padding:"1rem 1.25rem", border:"1px solid var(--border)" }}>
               <strong style={{ display:"block", fontSize:14, color:"var(--dark)", marginBottom:"0.25rem" }}>Account</strong>
@@ -594,7 +619,8 @@ function ApplicantModal({ applicant, onClose, onStatusUpdate }) {
           <h2 style={{ margin: 0, fontSize: "18px", color: "var(--dark)", fontFamily: "Sora, sans-serif" }}>
             Applicant Details
           </h2>
-          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "var(--muted)" }}>✕</button>
+          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "var(--muted)", lineHeight: 1 }}>
+            <FiTrash2 size={16} /></button>
         </div>
 
         {/* Applicant info */}
@@ -645,7 +671,7 @@ function ApplicantModal({ applicant, onClose, onStatusUpdate }) {
               fontSize: "14px", cursor: "pointer",
             }}
           >
-            👁 Review
+            <FiEye size={15} style={{ marginRight: 5, verticalAlign: 'middle' }} /> Review
           </button>
           <button
             disabled={updating}
@@ -769,7 +795,7 @@ function EmployerDashboard({ user, data, externalShowModal, onModalClose }) {
                     <td><StatusBadge status={job.type} /></td>
                     <td>
                       <div className="td-actions">
-                        <button className="icon-btn" title="Edit">✎</button>
+                        <button className="icon-btn" title="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
                         <button
                           className="icon-btn danger" title="Delete"
                           onClick={() => handleDeleteJob(job._id)}
@@ -844,7 +870,8 @@ function EmployerDashboard({ user, data, externalShowModal, onModalClose }) {
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
               <h2 style={{ margin: 0, fontSize: "18px", color: "var(--dark)", fontFamily: "Sora, sans-serif" }}>Post a New Job</h2>
-              <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", color: "var(--muted)", fontSize: "20px", cursor: "pointer" }}>✕</button>
+              <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", color: "var(--muted)", fontSize: "20px", cursor: "pointer", lineHeight: 1, display: "flex", alignItems: "center" }}>
+                <FiTrash2 size={16} /></button>
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
@@ -953,15 +980,15 @@ function AdminDashboard({ user, data, activeTab, onRefresh }) {
     <>
       <div className="stats-row">
         {[
-          { label: "Total Users",        value: stats.totalUsers        || 0, icon: "👥" },
-          { label: "Total Jobs",         value: stats.totalJobs         || 0, icon: "💼" },
-          { label: "Total Applications", value: stats.totalApplications || 0, icon: "📋" },
-          { label: "Accepted Hires",     value: stats.hires             || 0, icon: "🎯" },
+          { label: "Total Users",        value: stats.totalUsers        || 0, icon: <FiUsers size={18} /> },
+          { label: "Total Jobs",         value: stats.totalJobs         || 0, icon: <FiBriefcase size={18} /> },
+          { label: "Total Applications", value: stats.totalApplications || 0, icon: <FiList size={18} /> },
+          { label: "Accepted Hires",     value: stats.hires             || 0, icon: <FiTarget size={18} /> },
         ].map((s) => (
           <div key={s.label} className="stat-card">
             <div className="stat-top">
               <strong>{s.value}</strong>
-              <span style={{ fontSize: "1.2rem" }}>{s.icon}</span>
+              <span style={{ display: "flex", alignItems: "center", color: "var(--muted)" }}>{s.icon}</span>
             </div>
             <span>{s.label}</span>
           </div>
@@ -1228,14 +1255,14 @@ export default function Dashboard() {
               ? (data?.applications || []).length
               : 0;
             return [
-              { icon: "⊞",  label: "Overview",      roles: ["seeker","employer","admin"] },
-              { icon: "👥", label: "Users",         roles: ["admin"] },
-              { icon: "📋", label: "Applications",  roles: ["seeker","admin"] },
-              { icon: "💼", label: "Jobs",          roles: ["seeker","employer","admin"] },
-              { icon: "📄", label: "Resume",        roles: ["seeker"] },
-              { icon: "👤", label: "Profile",       roles: ["seeker","employer","admin"] },
-              { icon: "🔔", label: "Notifications", roles: ["seeker","employer","admin"], badge: notifCount },
-              { icon: "⚙",  label: "Settings",      roles: ["seeker","employer","admin"] },
+              { icon: <FiGrid size={15} />,         label: "Overview",      roles: ["seeker","employer","admin"] },
+              { icon: <FiUsers size={15} />,        label: "Users",         roles: ["admin"] },
+              { icon: <FiList size={15} />,         label: "Applications",  roles: ["seeker","admin"] },
+              { icon: <FiBriefcase size={15} />,    label: "Jobs",          roles: ["seeker","employer","admin"] },
+              { icon: <FiFileText size={15} />,     label: "Resume",        roles: ["seeker"] },
+              { icon: <FiUser size={15} />,         label: "Profile",       roles: ["seeker","employer","admin"] },
+              { icon: <FiBell size={15} />,         label: "Notifications", roles: ["seeker","employer","admin"], badge: notifCount },
+              { icon: <FiSettings size={15} />,     label: "Settings",      roles: ["seeker","employer","admin"] },
             ]
               .filter(item => item.roles.includes(user.role))
               .map((item) => (
@@ -1279,7 +1306,7 @@ export default function Dashboard() {
         <div className="dash-topbar">
           <div>
             <h1>{activeTab}</h1>
-            <p>Welcome back, {user.name || user.email} 👋</p>
+            <p>Welcome back, {user.name || user.email}</p>
           </div>
           {user.role === "employer" && (
             <button className="panel-btn" onClick={() => setShowEmployerModal(true)}>

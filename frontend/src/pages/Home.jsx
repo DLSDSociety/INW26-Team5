@@ -1,16 +1,34 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { 
+  FiCpu, 
+  FiBarChart2, 
+  FiDatabase, 
+  FiLayout, 
+  FiCloud, 
+  FiSmartphone, 
+  FiShield, 
+  FiTrendingUp,
+  FiBriefcase, 
+  FiUsers, 
+  FiAward, 
+  FiGlobe,
+  FiTarget,
+  FiZap,
+  FiFileText,
+  FiCheck
+} from "react-icons/fi";
 import "./Home.css";
 
 const CATEGORIES = [
-  { icon: "💻", label: "AI / ML" },
-  { icon: "📊", label: "Data Analytics" },
-  { icon: "⚙️", label: "Backend Dev" },
-  { icon: "🎨", label: "Frontend Dev" },
-  { icon: "☁️", label: "DevOps & Cloud" },
-  { icon: "📱", label: "Mobile Dev" },
-  { icon: "🔐", label: "Cybersecurity" },
-  { icon: "📈", label: "Product" },
+  { icon: <FiCpu />, label: "AI / ML" },
+  { icon: <FiBarChart2 />, label: "Data Analytics" },
+  { icon: <FiDatabase />, label: "Backend Dev" },
+  { icon: <FiLayout />, label: "Frontend Dev" },
+  { icon: <FiCloud />, label: "DevOps & Cloud" },
+  { icon: <FiSmartphone />, label: "Mobile Dev" },
+  { icon: <FiShield />, label: "Cybersecurity" },
+  { icon: <FiTrendingUp />, label: "Product" },
 ];
 
 const FEATURED_JOBS = [
@@ -89,10 +107,10 @@ const FEATURED_JOBS = [
 ];
 
 const STATS = [
-  { value: "10,000+", label: "Jobs Posted", icon: "💼" },
-  { value: "5,000+", label: "Companies", icon: "🏢" },
-  { value: "50,000+", label: "Job Seekers", icon: "👥" },
-  { value: "8,000+", label: "Hires Made", icon: "🎉" },
+  { value: "10,000+", label: "Jobs Posted", icon: <FiBriefcase /> },
+  { value: "5,000+", label: "Companies", icon: <FiGlobe /> },
+  { value: "50,000+", label: "Job Seekers", icon: <FiUsers /> },
+  { value: "8,000+", label: "Hires Made", icon: <FiAward /> },
 ];
 
 const COMPANIES = [
@@ -124,14 +142,14 @@ export default function Home() {
 
       {/* Announcement Bar */}
       <div className="announcement-bar">
-        <span>🎯 <strong>DLSDS Job Fair 2025</strong> – Connect with 200+ top recruiters live</span>
+        <span><FiTarget style={{ marginRight: 6, verticalAlign: 'middle' }} /> <strong>DLSDS Job Fair 2025</strong> – Connect with 200+ top recruiters live</span>
         <button onClick={() => navigate("/register")}>Register Free →</button>
       </div>
 
       {/* Hero */}
       <section className="hero">
         <div className="hero-content">
-          <span className="hero-badge">🚀 India's Premier Tech Job Portal</span>
+          <span className="hero-badge"><FiZap style={{ marginRight: 6, verticalAlign: 'middle', color: 'var(--orange)' }} /> India's Premier Tech Job Portal</span>
           <h1>
             Handpicked Premium<br />
             <span className="hero-highlight">Tech Jobs</span> For You
@@ -302,21 +320,21 @@ export default function Home() {
           <h2>Apply on the Go!<br />Your career, simplified.</h2>
           <ul className="why-list">
             <li>
-              <span className="why-check">✓</span>
+              <span className="why-check"><FiCheck size={14} /></span>
               <div>
                 <strong>Curated Premium Jobs</strong>
                 <p>Hand-screened listings you won't find anywhere else.</p>
               </div>
             </li>
             <li>
-              <span className="why-check">✓</span>
+              <span className="why-check"><FiCheck size={14} /></span>
               <div>
                 <strong>Instant Alerts</strong>
                 <p>Get notified the moment your dream role is posted.</p>
               </div>
             </li>
             <li>
-              <span className="why-check">✓</span>
+              <span className="why-check"><FiCheck size={14} /></span>
               <div>
                 <strong>Track Applications</strong>
                 <p>Know exactly where you stand with every application.</p>
@@ -328,8 +346,8 @@ export default function Home() {
         <div className="why-right">
           <div className="jobfeed-card">
             <div className="jobfeed-header">
-              <span>📋 My Jobfeed</span>
-              <span className="jobfeed-live">● Live</span>
+              <span><FiFileText style={{ marginRight: 6, verticalAlign: 'middle' }} /> My Jobfeed</span>
+              <span className="jobfeed-live"><span className="live-dot" /> Live</span>
             </div>
             {FEATURED_JOBS.slice(0, 4).map((job) => (
               <div key={job.id} className="jobfeed-item">

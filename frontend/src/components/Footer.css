@@ -1,7 +1,7 @@
 .footer {
   background: #1A0F0A;
   color: rgba(255, 255, 255, 0.75);
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
 .footer-top {
@@ -24,7 +24,7 @@
 }
 .footer-logo-icon { font-size: 22px; }
 .footer-logo-text {
-  font-family: 'Sora', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-size: 20px;
   font-weight: 800;
   color: #fff;
@@ -65,7 +65,7 @@
 
 /* Columns */
 .footer-col h4 {
-  font-family: 'Sora', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-size: 13px;
   font-weight: 700;
   color: #fff;
@@ -86,7 +86,7 @@
   border: none;
   color: rgba(255, 255, 255, 0.5);
   font-size: 13.5px;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
   cursor: pointer;
   padding: 0;
   text-align: left;
@@ -128,7 +128,7 @@
   border: none;
   color: rgba(255, 255, 255, 0.35);
   font-size: 12.5px;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
   cursor: pointer;
   padding: 0;
   transition: color 0.2s;

@@ -1,12 +1,13 @@
 import { useNavigate } from "react-router-dom";
+import { FiBriefcase, FiMapPin, FiMail, FiAward } from "react-icons/fi";
 import "./Footer.css";
 
 const QUICK_LINKS = [
-  { label: "Home",      path: "/" },
-  { label: "Find Jobs", path: "/jobs" },
-  { label: "Login",     path: "/login" },
-  { label: "Register",  path: "/register" },
-  { label: "Dashboard", path: "/dashboard" },
+  { label: "Home",             path: "/" },
+  { label: "Find Jobs",        path: "/jobs" },
+  { label: "About Us",         path: "/about" },
+  { label: "Terms of Service", path: "/terms" },
+  { label: "Privacy Policy",   path: "/privacy" },
 ];
 
 const JOB_CATEGORIES = [
@@ -55,7 +56,9 @@ export default function Footer() {
         {/* Brand */}
         <div className="footer-brand">
           <div className="footer-logo" onClick={() => navigate("/")}>
-            <span className="footer-logo-icon">💼</span>
+            <span className="footer-logo-icon">
+              <FiBriefcase size={22} style={{ color: "#FF6B35" }} />
+            </span>
             <span className="footer-logo-text">Job<span>Portal</span></span>
           </div>
           <p className="footer-tagline">
@@ -100,15 +103,15 @@ export default function Footer() {
           <h4>Contact</h4>
           <ul className="footer-contact">
             <li>
-              <span>📍</span>
+              <span><FiMapPin size={16} style={{ color: "#FF6B35" }} /></span>
               <span>Jorhat, Assam, India</span>
             </li>
             <li>
-              <span>📧</span>
+              <span><FiMail size={16} style={{ color: "#FF6B35" }} /></span>
               <span>support@jobportal.in</span>
             </li>
             <li>
-              <span>🏢</span>
+              <span><FiAward size={16} style={{ color: "#FF6B35" }} /></span>
               <span>Digital Literacy and Skill Development Society (DLSDS)</span>
             </li>
           </ul>
@@ -120,9 +123,9 @@ export default function Footer() {
       <div className="footer-bottom">
         <p>© {year} JobPortal. Built by <strong>Mustafa Azad Hussain</strong> · DLSDS Internship Project</p>
         <div className="footer-bottom-links">
-          <button>Privacy Policy</button>
-          <button>Terms of Service</button>
-          <button>Sitemap</button>
+          <button onClick={() => navigate("/privacy")}>Privacy Policy</button>
+          <button onClick={() => navigate("/terms")}>Terms of Service</button>
+          <button onClick={() => navigate("/about")}>About Us</button>
         </div>
       </div>
     </footer>

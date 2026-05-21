@@ -45,6 +45,9 @@ import Jobs from "./pages/Jobs";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
+import AboutUs from "./pages/AboutUs";
+import Terms from "./pages/Terms";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -70,6 +73,9 @@ function Layout() {
         <Route path="/login"     element={<Login />} />
         <Route path="/register"  element={<Register />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/about"     element={<AboutUs />} />
+        <Route path="/terms"     element={<Terms />} />
+        <Route path="/privacy"   element={<PrivacyPolicy />} />
       </Routes>
       {!hideFooter && <Footer />}
     </>
