@@ -104,7 +104,7 @@ export default function Footer() {
           <ul className="footer-contact">
             <li>
               <span><FiMapPin size={16} style={{ color: "#FF6B35" }} /></span>
-              <span>Jorhat, Assam, India</span>
+              <span>Guwahati, Assam, India</span>
             </li>
             <li>
               <span><FiMail size={16} style={{ color: "#FF6B35" }} /></span>

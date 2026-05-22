@@ -47,8 +47,8 @@ const recommendJobs = async (req, res) => {
     const resumeText = await extractTextFromPDF(filePath, 2500);
     console.log(`[recommend] PDF extracted in ${Date.now() - startTime}ms`);
 
-    // 3. Get jobs (limit to 10 latest active jobs to save tokens & latency)
-    const jobs = await Job.find().sort({ createdAt: -1 }).limit(10).lean();
+    // 3. Get jobs (limit to 5 latest active jobs to save tokens & latency)
+    const jobs = await Job.find().sort({ createdAt: -1 }).limit(5).lean();
     if (jobs.length === 0) {
       return res.status(404).json({ message: 'No jobs available to match' });
     }
@@ -67,7 +67,8 @@ const recommendJobs = async (req, res) => {
     // 5. Build prompt
     const prompt = `You are a job matching assistant.
 Analyze this resume against the job listings and return a match score (0-100) and 1-sentence reason for each job.
-Respond ONLY with a valid JSON array, no extra text, no markdown.
+
+CRITICAL: Respond ONLY with a valid JSON array of recommendations. Do NOT include any introductory explanation, conversational text, markdown code blocks, reasoning, thinking, or headers. Begin your response immediately with '[' and end with ']'. The entire output must be directly parseable by JSON.parse().
 
 RESUME:
 ${resumeText}
@@ -75,7 +76,7 @@ ${resumeText}
 JOB LISTINGS:
 ${jobList}
 
-JSON format (required):
+Required JSON format:
 [
   {
     "jobId": "<jobID>",
@@ -88,31 +89,48 @@ JSON format (required):
   }
 ]`;
 
-    // Try multiple free models sequentially to robustly bypass upstream rate limits (429s)
+    // Diverse free models across different providers to avoid provider-level rate limits.
+    // NVIDIA Nemotron Super is most reliable (tested); others are fallbacks with delay between retries.
     const candidateModels = [
-      'meta-llama/llama-3.2-3b-instruct:free',
-      'meta-llama/llama-3.3-70b-instruct:free',
-      'deepseek/deepseek-v4-flash:free',
+      'nvidia/nemotron-3-super-120b-a12b:free',   // Most reliable — try first
       'google/gemma-4-31b-it:free',
-      'openrouter/free'
+      'deepseek/deepseek-v4-flash:free',
+      'qwen/qwen3-coder:free',
+      'meta-llama/llama-3.3-70b-instruct:free',
+      'google/gemma-4-26b-a4b-it:free',
+      'z-ai/glm-4.5-air:free',
+      'qwen/qwen3-next-80b-a3b-instruct:free',
+      'nousresearch/hermes-3-llama-3.1-405b:free',
+      'meta-llama/llama-3.2-3b-instruct:free',
     ];
+
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
     let parsedRecommendations = null;
     let lastError = null;
+    let attemptCount = 0;
 
     for (const model of candidateModels) {
+      attemptCount++;
+      // Add a small delay between retries (skip first attempt) to let rate limits reset
+      if (attemptCount > 1) {
+        console.log(`[recommend] Waiting 2s before next attempt...`);
+        await delay(2000);
+      }
+
+      let response = null;
       try {
-        console.log(`[recommend] Attempting match call using model: ${model} at ${Date.now() - startTime}ms`);
-        const response = await axios.post(
+        console.log(`[recommend] Attempt ${attemptCount}/${candidateModels.length} — model: ${model} at ${Date.now() - startTime}ms`);
+        response = await axios.post(
           'https://openrouter.ai/api/v1/chat/completions',
           {
             model: model,
             messages: [{ role: 'user', content: prompt }],
             temperature: 0.1,
-            max_tokens: 800,
+            max_tokens: 1500,
           },
           {
-            timeout: 15000, // 15 seconds per try
+            timeout: 20000, // 20 seconds per try (free models can be slow)
             headers: {
               Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
               'Content-Type': 'application/json',
@@ -131,6 +149,8 @@ JSON format (required):
         }
 
         let raw = content.trim();
+        // Strip markdown code fences and any <think>...</think> reasoning blocks
+        raw = raw.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
         raw = raw.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim();
 
         const jsonStart = raw.indexOf('[');
@@ -142,16 +162,22 @@ JSON format (required):
         raw = raw.slice(jsonStart, jsonEnd + 1);
         parsedRecommendations = JSON.parse(raw);
 
-        console.log(`[recommend] Success with model: ${model} in ${Date.now() - startTime}ms`);
+        console.log(`[recommend] ✓ Success with model: ${model} in ${Date.now() - startTime}ms`);
         break; // break loop on success
       } catch (err) {
-        console.warn(`[recommend] Model ${model} failed validation: ${err.message}. Trying next candidate...`);
+        const status = err.response?.status || 'N/A';
+        const detail = err.response?.data?.error?.message || err.message;
+        console.warn(`[recommend] ✗ Model ${model} failed (HTTP ${status}): ${detail}`);
+        if (response?.data?.choices?.[0]?.message?.content) {
+          console.warn(`[recommend] Model output was: ${response.data.choices[0].message.content}`);
+        }
         lastError = err;
       }
     }
 
     if (!parsedRecommendations) {
-      console.warn('[recommend] All candidate AI matching models failed. Returning mock data.');
+      console.error(`[recommend] All ${candidateModels.length} candidate models failed after ${Date.now() - startTime}ms. Last error: ${lastError?.message}`);
+      console.warn('[recommend] Returning fallback placeholder data.');
       parsedRecommendations = jobs.slice(0, 3).map(job => ({
         jobId: job._id.toString(),
         title: job.title,

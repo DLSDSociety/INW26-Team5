@@ -29,8 +29,8 @@ const VALUES = [
 ];
 
 const TEAM = [
-  { name: "Mustafa Azad Hussain", role: "Full Stack Developer", initials: "MA" },
-  { name: "DLSDS Team", role: "Project Mentors", initials: "DL" },
+  // { name: "Mustafa Azad Hussain", role: "Full Stack Developer", initials: "MA" },
+ 
 ];
 
 export default function AboutUs() {
